@@ -1,3 +1,11 @@
+- Setup
+
+```
+git clone https://github.com/JorgeRojas827/dark-rally.git
+git pull origin main
+npm install
+```
+
 - Crear branch:
 
 ```
