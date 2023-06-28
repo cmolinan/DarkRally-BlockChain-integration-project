@@ -1,0 +1,19 @@
+* {
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  color: black;
+  background-color: white;
+  margin: auto;
+  padding: 0;
+}
+
+body {
+  padding: 5% 20px;
+  width: 30%;
+  border: solid 1px black;
+}
+
+#account {
+  font-weight: bold;
+}
