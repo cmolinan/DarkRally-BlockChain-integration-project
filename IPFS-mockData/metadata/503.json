@@ -1,0 +1,9 @@
+{
+  "name": "SSV NAZCAR #503",
+  "description": "DRchamps-vehicles-serie23-A",
+  "image": "https://ipfs.io/ipfs/QmcwiLTxUgjCV6L7XAqSZCby5LcdnQQrQKtuDm4kE3kVeY",
+  "attributes": [
+    { "trait_type": "PRICE", "value": "US$ 8.20" },
+    { "trait_type": "STOCK", "value": "300" }
+  ]
+}

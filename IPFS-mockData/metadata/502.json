@@ -1,0 +1,9 @@
+{
+  "name": "TRUCK XPEEDX #502",
+  "description": "DRchamps-vehicles-serie23-A",
+  "image": "https://ipfs.io/ipfs/QmUKWzB4HHCKPp5dVbYPy6huTt1Py8fmNwMswJH4H62iNw",
+  "attributes": [
+    { "trait_type": "PRICE", "value": "US$ 12.32" },
+    { "trait_type": "STOCK", "value": "300" }
+  ]
+}

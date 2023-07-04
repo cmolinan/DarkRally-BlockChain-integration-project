@@ -1,0 +1,9 @@
+{
+  "name": "SKIN #301",
+  "description": "NFSkin serie AA23-A",
+  "image": "https://ipfs.io/ipfs/QmPc12EWQKpPmwqUsNbRweLoMRtvQgBvEDCr6bcGmLyHNY",
+  "attributes": [
+    { "trait_type": "COLOR", "value": "RED" },
+    { "trait_type": "STOCK", "value": "1000" }
+  ]
+}

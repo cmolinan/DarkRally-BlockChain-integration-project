@@ -1,0 +1,9 @@
+{
+  "name": "TROPHY #403",
+  "description": "DRchamps-trophy-serie23-A-1000",
+  "image": "https://ipfs.io/ipfs/QmcUnsDNqtG7fNaWJLsxDWVzu3sR3DynVDdEFogvG7wRhe",
+  "attributes": [
+    { "trait_type": "PRICE", "value": "1000" },
+    { "trait_type": "STOCK", "value": "3" }
+  ]
+}
