@@ -1,0 +1,14 @@
+
+PUBLICADO en Mumbai:
+DarkRallyNFT Proxy Address: 0x5333259a113043c2c1e2C63512437BABf7033E68
+DarkRallyNFT Impl Address: 0x14cAfa2c20D04e7Eb7a11E25d0526e66B6b8ee86
+
+--------------
+Billetera 1-Carlos: 0x7A30a1401a37FBAFbb7db0207a1658511096B861
+
+Billetera  2-Carlos: 0xDEC0eE6F68f0CC0F5E9baE7a9219E1B3e7390e17
+
+----------
+
+USDC Contract (Mumbai) 0x643864518D0A8ca16EeF1c827E5E370ed51721FB
+
