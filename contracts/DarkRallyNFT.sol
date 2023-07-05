@@ -69,7 +69,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
 
 
     function mint(address account, uint256 tokenId, uint256 amount)
-        public
+        external
         onlyRole(MINTER_ROLE)
         whenNotPaused
     {        
