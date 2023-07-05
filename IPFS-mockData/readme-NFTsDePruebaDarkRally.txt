@@ -95,7 +95,7 @@ nameOfNft: Truck Thorment
 category: Vehicles 
 metadataHash: QmPUkZXhGHV9ByLHt1eCdS7NFs1gWfNUMD1fNJvY9zNxzR
 maxSupply: 300
-initialPrice: 
+initialPrice: 10
 askDateForMint: false
 validUntil: 0
 entriesCounter: 0
