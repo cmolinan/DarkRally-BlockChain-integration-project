@@ -14,7 +14,7 @@ interface IDarkRallyNFT {
 contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {    
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");    
-    bytes32 public constant PURCHASER_ROLE = keccak256("PURCHASER_ROLE");  //set prices and purchase NFTs
+    bytes32 public constant BUSINESS_ROLE = keccak256("BUSINESS_ROLE");  //set NFTs prices 
 
     // USDC Coin contract
     IERC20Upgradeable USDCoin_SC;  // Setter in Constructor
@@ -28,15 +28,23 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
    // Prices storage:   tokenId => price 
     mapping(uint256 tokenId => uint256) public priceOfNft;
 
-    event SetNftPrices(uint256[] tokenId, uint256[] price);  //When new prices were registered
-    event PurchaseOfNft(address account, uint256 tokenId, uint256 amount, uint256 coinsPaid); //when a purchase of NFTs was done    
+    //Event when new prices were registered
+    event SetNftPrices(uint256[] tokenId, uint256[] price);  
+
+    //Event when a purchase of NFTs was done    
+    event PurchaseOfNft(address account, uint256 tokenId, uint256 amount, uint256 coinsPaid);
         
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(address _usdcSCaddress, address _darkRallyNftAddress, address _companyWalletAddr) public initializer {                
+    function initialize(
+        address _usdcSCaddress, 
+        address _darkRallySCnftAddress, 
+        address _companyWalletAddr
+    ) public initializer {                
+
         __Pausable_init();
         __AccessControl_init();
         __UUPSUpgradeable_init();
@@ -44,15 +52,15 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
-        _grantRole(PURCHASER_ROLE, msg.sender);        
+        _grantRole(BUSINESS_ROLE, msg.sender);
 
         USDCoin_SC = IERC20Upgradeable(_usdcSCaddress);
-        DarkRallyNFT_SC = IDarkRallyNFT(_darkRallyNftAddress);
+        DarkRallyNFT_SC = IDarkRallyNFT(_darkRallySCnftAddress);
 
         companyWalletAddr = _companyWalletAddr; 
     }
     
-    function setNftPrice(uint256[] memory _tokenId, uint256[] memory _price) external onlyRole(PURCHASER_ROLE) {
+    function setNftPrice(uint256[] memory _tokenId, uint256[] memory _price) external onlyRole(BUSINESS_ROLE) {
         require( _price.length == _tokenId.length && _price.length != 0, "Length of arrays not equal or zero");
 
         for (uint256  i = 0; i < _price.length; i++) {
@@ -63,7 +71,7 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
         emit SetNftPrices(_tokenId, _price);
     }
 
-    function purchaseNftById(uint256 _tokenId, uint256 _amount) external whenNotPaused onlyRole(PURCHASER_ROLE) {        
+    function purchaseNftById(uint256 _tokenId, uint256 _amount) external whenNotPaused {        
         
         // Price to be paid for all tokens
         uint256 amountToPay = priceOfNft[_tokenId] * _amount;
