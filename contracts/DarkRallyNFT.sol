@@ -12,7 +12,7 @@ import "hardhat/console.sol";
 
 contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgradeable, 
          PausableUpgradeable, ERC1155BurnableUpgradeable, ERC1155SupplyUpgradeable, UUPSUpgradeable {
-    // bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
+    bytes32 public constant BUSINESS_ROLE = keccak256("BUSINESS_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
@@ -52,13 +52,14 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         _grantRole(PAUSER_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
+        _grantRole(BUSINESS_ROLE, msg.sender);
     }
 
 
     function registerNewTypeOfNft (
         uint256 tokenId, string calldata nameOfNFT, string calldata category,  string calldata metadataHashIpfs, 
         uint256 maxSupply, uint256 initialPrice, bool askDateForMint,  uint256 validUntil, uint256 entriesCounter
-    ) public  onlyRole(DEFAULT_ADMIN_ROLE) whenNotPaused {
+    ) public  onlyRole(BUSINESS_ROLE) {
                 
         require(!nftInfo[tokenId].tokenIsRegistered, "TokenId was already registered");
         require ( bytes(metadataHashIpfs).length > 32, "Check the MetadataHashIPFS entry");
@@ -94,6 +95,18 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         );
     }
 
+    function changeTokenPrice(uint256 _tokenId, uint256 _newPrice) external onlyRole(BUSINESS_ROLE) {
+        require(nftInfo[_tokenId].tokenIsRegistered, "Token is not registered");
+
+        nftInfo[_tokenId].price = _newPrice;
+
+    }
+
+    function retrieveTokenPrice(uint256 _tokenId) external view returns(uint256) {
+        
+        return nftInfo[_tokenId].price;
+
+    }
 
     function pause() public onlyRole(PAUSER_ROLE) {
         _pause();
