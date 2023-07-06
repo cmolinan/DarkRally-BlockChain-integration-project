@@ -7,36 +7,34 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-interface IDarkRallyNFT {
-    
+interface IDarkRallyNFT {    
     function mint(address account, uint256 tokenId, uint256 amount) external;
-
-    function balanceOf(address account, uint256 id) external view returns (uint256);
 }
 
-contract MyToken is Initializable, PausableUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {
+contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {    
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");    
+    bytes32 public constant PURCHASER_ROLE = keccak256("PURCHASER_ROLE");  //set prices and purchase NFTs
 
     // USDC Coin contract
-    IERC20Upgradeable USDCoin;  // Setter in Constructor
-    IDarkRallyNFT DarkRallyNFT;  // Setter in Constructor
+    IERC20Upgradeable USDCoin_SC;  // Setter in Constructor
 
-    event DeliverNft(address account, uint256 nftId);
-    mapping (uint256 _tknId => bool) internal tokensSold;
-
-    // Wallet to transfer the USDC coins
+    // DarkRallyNFT contract
+    IDarkRallyNFT DarkRallyNFT_SC;  // Setter in Constructor
+   
+    // Wallet for transferring USDC coins for each purchase
     address companyWalletAddr;   // Setter in Constructor
-    
-    // only for debug
-    //mapping (uint256 _tknId => uint256) public  tmpTokensSoldbyPrice;
-    // mapping (uint256 _tknId => address) public  tmpTokensSoldbyAddress;
+   
+   // Prices storage:   tokenId => price 
+    mapping(uint256 tokenId => uint256) public priceOfNft;
 
+    event SetNftPrices(uint256[] tokenId, uint256[] price);  //When new prices were registered
+    event PurchaseOfNft(address account, uint256 tokenId, uint256 amount, uint256 coinsPaid); //when a purchase of NFTs was done    
+        
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
-
 
     function initialize(address _usdcSCaddress, address _darkRallyNftAddress, address _companyWalletAddr) public initializer {                
         __Pausable_init();
@@ -46,56 +44,51 @@ contract MyToken is Initializable, PausableUpgradeable, AccessControlUpgradeable
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
+        _grantRole(PURCHASER_ROLE, msg.sender);        
 
-        USDCoin = IERC20Upgradeable(_usdcSCaddress);
-        DarkRallyNFT = IDarkRallyNFT(_darkRallyNftAddress);
+        USDCoin_SC = IERC20Upgradeable(_usdcSCaddress);
+        DarkRallyNFT_SC = IDarkRallyNFT(_darkRallyNftAddress);
 
-        companyWalletAddr = _companyWalletAddr;  //for transfers of USDC coins to company
+        companyWalletAddr = _companyWalletAddr; 
     }
     
-    function purchaseNftById(uint256 _id) external {        
+    function setNftPrice(uint256[] memory _tokenId, uint256[] memory _price) external onlyRole(PURCHASER_ROLE) {
+        require( _price.length == _tokenId.length && _price.length != 0, "Length of arrays not equal or zero");
 
-        //require (tokens avallable)
+        for (uint256  i = 0; i < _price.length; i++) {
+            priceOfNft[_tokenId[i]] = _price[i];
+        }
         
-        require( !tokensSold[_id], "tokenId not available");         
-        
-        // Get the Price of the TokenId
-        uint256 priceNft = _getPriceByTokenId(_id) * 10 ** 18;
-
-        require( USDCoin.allowance(msg.sender, address(this)) >= priceNft, "DarkRallySale: Not enough allowance");
-        require( USDCoin.balanceOf(msg.sender) >= priceNft, "DarkRallySale: Not enough token balance"); 
-        
-        DarkRallyNFT.mint(msg.sender, _id, _id); 
-        USDCoin.transferFrom(msg.sender, companyWalletAddr, priceNft);
-
         // Emit event
-        emit DeliverNft(msg.sender, _id);
-        tokensSold[_id] = true;
-        // tmpTokensSoldbyPrice[_id] = priceNft;
-        // tmpTokensSoldbyAddress[_id] = msg.sender;        
+        emit SetNftPrices(_tokenId, _price);
     }
 
-    // Según el id del NFT, devuelve el precio. Existen 3 grupos de precios
-    function _getPriceByTokenId(uint256 _id) internal pure returns (uint256) {
+    function purchaseNftById(uint256 _tokenId, uint256 _amount) external whenNotPaused onlyRole(PURCHASER_ROLE) {        
+        
+        // Price to be paid for all tokens
+        uint256 amountToPay = priceOfNft[_tokenId] * _amount;
 
-        //return pricexxx
+        require( amountToPay > 0, "NFT without price or amount is zero");
+        require( USDCoin_SC.allowance(msg.sender, address(this)) >= amountToPay, "Not enough allowance for this SC");
+        require( USDCoin_SC.balanceOf(msg.sender) >= amountToPay, "Not enough USDC balance"); 
+        
+        //transfer coins to company Wallet
+        USDCoin_SC.transferFrom(msg.sender, companyWalletAddr, amountToPay);
+        
+        //Mint the tokens
+        DarkRallyNFT_SC.mint(msg.sender, _tokenId, _amount);
+
+        // Emit event
+        emit PurchaseOfNft(msg.sender, _tokenId, _amount, amountToPay);
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {
-        _pause();
+        _pause();        
     }
 
     function unpause() public onlyRole(PAUSER_ROLE) {
         _unpause();
     }
-
-    // function _beforeTokenTransfer(address from, address to, uint256 amount)
-    //     internal
-    //     whenNotPaused
-    //     override
-    // {
-    //     super._beforeTokenTransfer(from, to, amount);
-    // }
 
     function _authorizeUpgrade(address newImplementation)
         internal
