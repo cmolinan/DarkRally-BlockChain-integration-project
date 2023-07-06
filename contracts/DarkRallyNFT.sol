@@ -34,7 +34,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
     mapping(uint256 tokenId => NftInfo) public nftInfo;
 
     //required for OpenSea
-    string public name =  "Dark Rally NFT Collection - Inventory #01";
+    string public name;
     
     //Event when a new NFT is registered
     event RegisterNewTypeOfNFT (NftInfo);
@@ -57,6 +57,8 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         _grantRole(MINTER_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
         _grantRole(BUSINESS_ROLE, msg.sender);
+
+        name =  "Dark Rally NFT Collection - Inventory #01";
     }
 
 
