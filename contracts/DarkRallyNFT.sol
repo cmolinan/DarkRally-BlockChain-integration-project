@@ -102,9 +102,22 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
 
     }
 
-    function retrieveTokenPrice(uint256 _tokenId) external view returns(uint256) {
+    function getTokenPrice(uint256 _tokenId) external view returns(uint256) {
+        require(nftInfo[_tokenId].tokenIsRegistered, "Token is not registered");
         
         return nftInfo[_tokenId].price;
+    }
+
+    function getAssetsOfAnAccount(address _account, uint256[] calldata _tokensList ) external view returns(uint256[] memory) {
+        
+        require( _tokensList.length != 0, "Length of array is zero");
+
+        uint256[] memory output;
+        for (uint256  i = 0; i < _tokensList.length; i++) {
+            output[i] = balanceOf(_account, _tokensList[i]);
+        }
+        
+        return output;
 
     }
 
