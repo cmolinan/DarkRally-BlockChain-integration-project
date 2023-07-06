@@ -73,7 +73,6 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
     
     }
 
-
     function mint(address account, uint256 tokenId, uint256 amount)
         external
         onlyRole(MINTER_ROLE)
@@ -108,17 +107,15 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         return nftInfo[_tokenId].price;
     }
 
-    function getAssetsOfAnAccount(address _account, uint256[] calldata _tokensList ) external view returns(uint256[] memory) {
+    function getAssetsOfAccount(address _account,  uint256[] calldata _tokensList ) external view returns(uint256[] memory) {
+        require(_tokensList.length != 0, "Length of array is zero");
         
-        require( _tokensList.length != 0, "Length of array is zero");
+        uint256[] memory balanceList = new uint256[](_tokensList.length);
 
-        uint256[] memory output;
-        for (uint256  i = 0; i < _tokensList.length; i++) {
-            output[i] = balanceOf(_account, _tokensList[i]);
+        for (uint256 i = 0; i < _tokensList.length; ++i) {
+            balanceList[i] = balanceOf(_account, _tokensList[i]);
         }
-        
-        return output;
-
+        return balanceList;
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {
@@ -128,7 +125,6 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
     function unpause() public onlyRole(PAUSER_ROLE) {
         _unpause();
     }
-
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
         internal
