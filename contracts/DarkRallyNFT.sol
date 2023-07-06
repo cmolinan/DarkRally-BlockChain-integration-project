@@ -26,11 +26,15 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         uint256 price; //ie 9000000  (with 6 decimals -- USDC)
         bool askDateForMint; // If true, the expiration date will be validated before minting.
         uint256 validUntil; // initially used for Tickets - expressed in epoch time        
-        uint256 entriesCounter; //initially used for Tickets - could be updated
+        uint256 entriesCounter; //initially used for Tickets
         bool tokenIsRegistered; //needed to determine if this token has been registered or not. It's a requirement to MINT
     }
     
+    //save all the NFT registered by function 'registerNewTypeOfNft'
     mapping(uint256 tokenId => NftInfo) public nftInfo;
+
+    //required for OpenSea
+    string public name =  "Dark Rally NFT Collection - Inventory #01";
     
     //Event when a new NFT is registered
     event RegisterNewTypeOfNFT (NftInfo);
