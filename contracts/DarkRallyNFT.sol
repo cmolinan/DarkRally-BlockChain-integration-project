@@ -23,7 +23,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         string category; //ie: Toys, Tickets, Tropheus, Vehicles, Skins --only for show in getter function
         string metadataHashIpfs;  //ie: QmNoLB8krmgfntxAHgaJrTE2Mf6NCPQ7ct1UvhH2pNkLeg        
         uint256 maxSupply; //ie: 3000          
-        uint256 initialPrice; //ie 9  (it's supposed it's in US$)
+        uint256 price; //ie 9000000  (with 6 decimals -- USDC)
         bool askDateForMint; // If true, the expiration date will be validated before minting.
         uint256 validUntil; // initially used for Tickets - expressed in epoch time        
         uint256 entriesCounter; //initially used for Tickets - could be updated
@@ -32,6 +32,8 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
     
     mapping(uint256 tokenId => NftInfo) public nftInfo;
     
+    //Event when a new NFT is registered
+    event RegisterNewTypeOfNFT (NftInfo);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -54,7 +56,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
 
 
     function registerNewTypeOfNft (
-        uint256 tokenId, string memory nameOfNFT, string memory category,  string calldata metadataHashIpfs, 
+        uint256 tokenId, string calldata nameOfNFT, string calldata category,  string calldata metadataHashIpfs, 
         uint256 maxSupply, uint256 initialPrice, bool askDateForMint,  uint256 validUntil, uint256 entriesCounter
     ) public  onlyRole(DEFAULT_ADMIN_ROLE) whenNotPaused {
                 
@@ -65,6 +67,9 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
 
         nftInfo[tokenId] = NftInfo(nameOfNFT, category, metadataHashIpfs, 
          maxSupply, initialPrice, askDateForMint, validUntil,  entriesCounter, true);  //true means tokenIsRegistered
+        
+        emit RegisterNewTypeOfNFT (nftInfo[tokenId]);
+    
     }
 
 
