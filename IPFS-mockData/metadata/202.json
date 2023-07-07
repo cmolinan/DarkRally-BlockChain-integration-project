@@ -1,0 +1,9 @@
+{
+  "name": "TOY #202",
+  "description": "NFToy serie AA23-B",
+  "image": "https://ipfs.io/ipfs/QmY9i1a5PHzh4vzXSp5NTEKNSEMJCWdmDRPaUu2KoZQytD",
+  "attributes": [
+    { "trait_type": "STOCK", "value": "3000" },
+    { "trait_type": "NAME", "value": "Juan Perez" }
+  ]
+}

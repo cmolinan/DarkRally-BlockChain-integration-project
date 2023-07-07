@@ -1,0 +1,9 @@
+{
+  "name": "TOY #201",
+  "description": "NFToy serie AA23-A",
+  "image": "https://ipfs.io/ipfs/QmPHmhzkfgRrUAuMZ4knUvDiBCd3BEzLquLQjBiTwvNRfq",
+  "attributes": [
+    { "trait_type": "STOCK", "value": "3000" },
+    { "trait_type": "NAME", "value": "Anibal Aliaga" }
+  ]
+}

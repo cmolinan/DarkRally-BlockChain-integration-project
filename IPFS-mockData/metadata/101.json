@@ -1,0 +1,10 @@
+{
+  "name": "TICKET #101",
+  "description":  "DRchamps-serie23-A",
+  "image": "https://ipfs.io/ipfs/QmRTKuQ6FmDoXnyGcpLQs4kZ4kv1UWSfBiJwKA6S6iRmuf",
+  "attributes": [
+    { "trait_type": "EXPIRE", "value": "31DIC2023" },
+    { "trait_type": "ENTRIES", "value": "1" },
+    { "trait_type": "STOCK", "value": "10000" }
+  ]
+}

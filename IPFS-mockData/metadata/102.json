@@ -1,0 +1,10 @@
+{
+  "name": "TICKET #102",
+  "description":  "DRchamps-serie24-A",
+  "image": "https://ipfs.io/ipfs/QmcCgboBrdnh2aSn7bmyTVSUYK6Z5vLUfMXsib2FG6gSwC",
+  "attributes": [
+    { "trait_type": "EXPIRE", "value": "30JUN2024" },
+    { "trait_type": "ENTRIES", "value": "1" },
+    { "trait_type": "STOCK", "value": "50000" }    
+  ]
+}
