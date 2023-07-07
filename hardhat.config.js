@@ -1,9 +1,12 @@
 require("dotenv").config();
 require("@nomicfoundation/hardhat-toolbox");
 require("@openzeppelin/hardhat-upgrades");
+require('solidity-coverage');
+
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
+  plugins: ['hardhat-hardhat-coverage'],
   solidity: {
     version: "0.8.18",
     settings: {
@@ -13,14 +16,10 @@ module.exports = {
       },
     },
   },  
-  defaultNetwork: "localhost",
+
+  
+ 
   networks: {    
-    localhost: {
-      url: "HTTP://127.0.0.1:8545",
-      timeout: 800000,
-      gas: "auto",
-      gasPrice: "auto",
-    },    
     mumbai: {
       url: process.env.MUMBAI_TESNET_URL,
       accounts: [process.env.PRIVATE_KEY || ""],
