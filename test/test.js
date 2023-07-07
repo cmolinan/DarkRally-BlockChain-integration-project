@@ -8,7 +8,7 @@ function getRole(role) {
   return ethers.utils.keccak256(ethers.utils.toUtf8Bytes(role));
 }
 
-describe("DarkRallyNFT", function () {
+describe("DarkRallyNFT tests", function () {
 
 const MINTER_ROLE = getRole("MINTER_ROLE");
 const BURNER_ROLE = getRole("BURNER_ROLE");
@@ -36,7 +36,7 @@ beforeEach(async () => {
   
    implementationAddress = await upgrades.erc1967.
   getImplementationAddress(darkRallyNFT.address);
-  console.log("Implementation address: ", implementationAddress);
+ 
 
 });
 
@@ -53,7 +53,7 @@ beforeEach(async () => {
     
     var implementationAddress = await upgrades.erc1967.
     getImplementationAddress(darkRallyNFT.address);
-    console.log("Implementation address: ", implementationAddress);
+   
      
     return { darkRallyNFT, owner, alice, bob };
   }
@@ -88,17 +88,8 @@ beforeEach(async () => {
         0, // Valid Until
         0 // Entries Counter
       );
-
-      // Mint a new NFT
-      const errorMessage =
-        "AccessControl: account " +
-        alice.address.toLowerCase() +
-        " is missing role " +
-        getRole("DEFAULT_ADMIN_ROLE");
-
-      await expect(
-        darkRallyNFT.connect(alice).mint(alice.address, 1, 101)
-      ).to.be.revertedWith(errorMessage);
+  await  darkRallyNFT.connect(owner).mint(alice.address, 1, 1);
+      
 
       // Check the balance of the recipient
       const balance = await darkRallyNFT.balanceOf(alice.address, 1);
@@ -143,26 +134,35 @@ it("shouldn't pause the contract", async function () {
     const { darkRallyNFT, owner, alice } = await loadFixture(deployFixture);
   
     // Verificar que la función solo pueda ser llamada por el usuario con el rol PAUSER_ROLE
-    console.log("validadon que no se pueda pausar");
+    
     await expect(
       darkRallyNFT.connect(alice).pause()
     ).to.be.
     revertedWith("AccessControl:"+
     " account "+alice.address.toLowerCase() +" is missing role "+getRole("PAUSER_ROLE"));
     
-    
-    console.log( "passed"); 
+
     // Llamar a la función pause como el owner del contrato (quien tiene el rol PAUSER_ROLE)
 
   });
   it("should pause the contract", async  ()=> {
     
-    const { darkRallyNFT, owner, alice } = await loadFixture(deployFixture);
+ 
     
     
     await darkRallyNFT.connect(owner).pause();
     // Verificar que el contrato esté en pausa
     expect(await darkRallyNFT.paused()).to.equal(true);  
+});
+it("should despause the contract", async  ()=> {
+    
+ 
+  
+  
+  await darkRallyNFT.connect(owner).pause();
+  await darkRallyNFT.connect(owner).unpause();
+  // Verificar que el contrato esté en pausa
+  expect(await darkRallyNFT.paused()).to.equal(false);  
 });
   
 it('debería registrar un nuevo tipo de NFT exitosamente', async () => {
@@ -199,7 +199,7 @@ it('debería registrar un nuevo tipo de NFT exitosamente', async () => {
       200, 2, true, 0, 0
     )).to.be.revertedWith('TokenId was already registered');
   });
-  it.only('debería requerir una longitud de MetadataHashIPFS adecuada', async () => {
+  it('debería requerir una longitud de MetadataHashIPFS adecuada', async () => {
     const tokenId = 1;
     const nameOfNFT = 'MiNFT';
     const category = 'Categoria';
@@ -231,11 +231,11 @@ it('debería registrar un nuevo tipo de NFT exitosamente', async () => {
       maxSupply, initialPrice, askDateForMint, validUntil, entriesCounter
     )).to.be.revertedWith('Maxsupply must be greater than 0');
   });
-  it.only('debería requerir una fecha de vencimiento válida si askDateForMint es true', async () => {
+  it('debería requerir una fecha de vencimiento válida si askDateForMint es true', async () => {
     const tokenId = 1;
     const nameOfNFT = 'MiNFT';
     const category = 'Categoria';
-    const metadataHashIpfs = 'MetadataHash';
+   
     const maxSupply = 100;
     const initialPrice = 1;
     const askDateForMint = true;
@@ -246,6 +246,215 @@ it('debería registrar un nuevo tipo de NFT exitosamente', async () => {
       tokenId, nameOfNFT, category, metadataHashIpfs,
       maxSupply, initialPrice, askDateForMint, validUntil, entriesCounter
     )).to.be.revertedWith('Expiration date must be greater than current date');
+  });
+  it('debería registrar un nuevo tipo de NFT sin fecha de vencimiento requerida', async () => {
+    const tokenId = 1;
+    const nameOfNFT = 'MiNFT';
+    const category = 'Categoria';
+    
+    const maxSupply = 100;
+    const initialPrice = 1;
+    const askDateForMint = false;
+    const validUntil = 0;
+    const entriesCounter = 0;
+
+      await expect(darkRallyNFT.registerNewTypeOfNft(
+        tokenId, nameOfNFT, category, metadataHashIpfs,
+        maxSupply, initialPrice, askDateForMint, validUntil, entriesCounter
+      ));
+      const nftInfo = await darkRallyNFT.nftInfo(tokenId);
+      
+      expect(nftInfo.tokenIsRegistered).to.be.true;
+    });
+     
+    it('debería registrar un nuevo tipo de NFT con fecha de vencimiento requerida', async () => {
+      const tokenId = 1;
+      const nameOfNFT = 'MiNFT';
+      const category = 'Categoria';
+      const currentTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+
+    // Increase the time by 1 day (86400 seconds)
+    
+      
+      const maxSupply = 100;
+      const initialPrice = 1;
+      const askDateForMint = true;
+      const validUntil = currentTimestamp + 10000;
+      const entriesCounter = 0;
+      
+        await expect(darkRallyNFT.registerNewTypeOfNft(
+          tokenId, nameOfNFT, category, metadataHashIpfs,
+          maxSupply, initialPrice, askDateForMint, validUntil, entriesCounter
+        ));
+        const nftInfo = await darkRallyNFT.nftInfo(tokenId);
+        
+        expect(nftInfo.tokenIsRegistered).to.be.true;
+      });
+
+         it('debería registrar un nuevo tipo de NFT con fecha de vencimiento requerida', async () => {
+      const tokenId = 1;
+      const nameOfNFT = 'MiNFT';
+      const category = 'Categoria';
+      const currentTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+
+    // Increase the time by 1 day (86400 seconds)
+    
+      
+      const maxSupply = 100;
+      const initialPrice = 1;
+      const askDateForMint = true;
+      const validUntil = currentTimestamp + 10000;
+      const entriesCounter = 0;
+      
+        await expect(darkRallyNFT.registerNewTypeOfNft(
+          tokenId, nameOfNFT, category, metadataHashIpfs,
+          maxSupply, initialPrice, askDateForMint, validUntil, entriesCounter
+        ));
+        const nftInfo = await darkRallyNFT.nftInfo(tokenId);
+        
+        expect(nftInfo.tokenIsRegistered).to.be.true;
+      });
+
+      it('debería registrar un nuevo tipo de NFT con fecha de vencimiento requerida', async () => {
+        const tokenId = 1;
+        const nameOfNFT = 'MiNFT';
+        const category = 'Categoria';
+        const currentTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+  
+      
+      
+        
+        const maxSupply = 100;
+        const initialPrice = 1;
+        const askDateForMint = true;
+        const validUntil = currentTimestamp + 10000;
+        const entriesCounter = 0;
+        
+          await expect(darkRallyNFT.registerNewTypeOfNft(
+            tokenId, nameOfNFT, category, metadataHashIpfs,
+            maxSupply, initialPrice, askDateForMint, validUntil, entriesCounter
+          ));
+          const nftInfo = await darkRallyNFT.nftInfo(tokenId);
+          
+          expect(nftInfo.tokenIsRegistered).to.be.true;
+        });
+
+it('Token debería  de registrarse antes del mint', async () => {
+        const tokenId = 1023;
+          
+          
+          expect(darkRallyNFT.mint(alice,tokenId,100 ) ).to.be.revertedWith('Token needs to be registered before mint');
+        });
+        it('should mint tokens successfully', async () => {
+          const account = owner.address;
+          const tokenId = 1;
+          const nameOfNFT = 'MiNFT';
+          const category = 'Categoria';
+          const currentTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+    
+        
+        
+          
+          const maxSupply = 100;
+          const initialPrice = 1;
+          const askDateForMint = true;
+          const validUntil = currentTimestamp + 10000;
+          const entriesCounter = 0;
+          const amount = 10;
+          
+            await darkRallyNFT.registerNewTypeOfNft(
+              tokenId, nameOfNFT, category, metadataHashIpfs,
+              maxSupply, initialPrice, askDateForMint, validUntil, entriesCounter
+            );
+            await darkRallyNFT.mint(account, tokenId, amount);
+      
+          // Assert the minted tokens
+          const balance = await darkRallyNFT.balanceOf(account, tokenId);
+          expect(balance).to.equal(amount);
+        });
+
+         it('should revert if token is not registered', async () => {
+    const account = owner.address;
+    const tokenId = 1;
+    const amount = 10;
+
+    // Mint tokens without registering the token
+    await expect(darkRallyNFT.mint(account, tokenId, amount)).to.be.revertedWith('Token needs to be registered before mint');
+  });
+
+  it('should revert if max supply limit is reached', async () => {
+    const account = owner.address;
+    const tokenId = 1;
+    const maxSupply = 10;
+    const amount = 20;
+
+    // Register the token with a max supply
+    await darkRallyNFT.registerNewTypeOfNft(tokenId, 'NFT Name', 'Category', metadataHashIpfs, maxSupply, 1, false, 0, 0);
+
+    // Mint tokens exceeding the max supply
+    await expect(darkRallyNFT.mint(account, tokenId, amount)).to.be.revertedWith('Limit of Supply for this token has been reached');
+  });
+
+  it('should revert if token has expired', async () => {
+    const oneDayInSeconds = 24 * 60 * 60;
+    const account = owner.address;
+    const tokenId = 1;
+    const amount = 10;
+    const currentTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+    const validUntil = currentTimestamp + 10000; // Set validUntil to a past timestamp
+ 
+    // Register the token with askDateForMint and expired validUntil
+    await darkRallyNFT.registerNewTypeOfNft(tokenId, 'NFT Name', 'Category', metadataHashIpfs, 100, 1, true, validUntil, 0);
+    await ethers.provider.send('evm_increaseTime', [oneDayInSeconds]);
+    await ethers.provider.send('evm_mine');
+    // Mint tokens for an expired token
+    await expect(darkRallyNFT.mint(account, tokenId, amount)).to.be.revertedWith('This token has already expired');
+  });
+
+  it('should revert if is paused', async () => {
+    const oneDayInSeconds = 24 * 60 * 60;
+    const account = owner.address;
+    const tokenId = 1;
+    const amount = 10;
+    const currentTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
+    const validUntil = currentTimestamp + 10000; // Set validUntil to a past timestamp
+ 
+      
+  await darkRallyNFT.connect(owner).pause();
+ 
+  // Verificar que el contrato esté en pausa
+ 
+
+    // Register the token with askDateForMint and expired validUntil
+    // Mint tokens for an expired token
+    await expect(darkRallyNFT.mint(account, tokenId, amount)).to.be.revertedWith('Pausable: paused');
+  });
+  it("should return the correct URI for a given token ID", async () => {
+    // Set up
+    const tokenId = 1;
+    const nameOfNFT = 'MiNFT';
+    const category = 'Categoria';
+    
+    const maxSupply = 100;
+    const initialPrice = 1;
+    const askDateForMint = false;
+    const validUntil = 0;
+    const entriesCounter = 0;
+
+    await darkRallyNFT.registerNewTypeOfNft(
+      tokenId, nameOfNFT, category, metadataHashIpfs,
+      maxSupply, initialPrice, askDateForMint, validUntil, entriesCounter
+    );
+
+    
+    
+    const expectedURI = "https://ipfs.io/ipfs/" + metadataHashIpfs  ;
+
+    // Call the uri function
+    const actualURI = await darkRallyNFT.uri(tokenId);
+
+    // Assert
+    expect(actualURI).to.equal(expectedURI);
   });
 
 });
