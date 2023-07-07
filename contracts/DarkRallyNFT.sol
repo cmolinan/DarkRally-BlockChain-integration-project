@@ -12,7 +12,7 @@ import "hardhat/console.sol";
 
 contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgradeable, 
          PausableUpgradeable, ERC1155BurnableUpgradeable, ERC1155SupplyUpgradeable, UUPSUpgradeable {
-    // bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
+    bytes32 public constant BUSINESS_ROLE = keccak256("BUSINESS_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
@@ -23,15 +23,21 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         string category; //ie: Toys, Tickets, Tropheus, Vehicles, Skins --only for show in getter function
         string metadataHashIpfs;  //ie: QmNoLB8krmgfntxAHgaJrTE2Mf6NCPQ7ct1UvhH2pNkLeg        
         uint256 maxSupply; //ie: 3000          
-        uint256 initialPrice; //ie 9  (it's supposed it's in US$)
+        uint256 price; //ie 9000000  (with 6 decimals -- USDC)
         bool askDateForMint; // If true, the expiration date will be validated before minting.
         uint256 validUntil; // initially used for Tickets - expressed in epoch time        
-        uint256 entriesCounter; //initially used for Tickets - could be updated
+        uint256 entriesCounter; //initially used for Tickets
         bool tokenIsRegistered; //needed to determine if this token has been registered or not. It's a requirement to MINT
     }
     
+    //save all the NFT registered by function 'registerNewTypeOfNft'
     mapping(uint256 tokenId => NftInfo) public nftInfo;
+
+    //required for OpenSea
+    string public name;
     
+    //Event when a new NFT is registered
+    event RegisterNewTypeOfNFT (NftInfo);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -50,13 +56,16 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         _grantRole(PAUSER_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
+        _grantRole(BUSINESS_ROLE, msg.sender);
+
+        name =  "Dark Rally NFT Collection - Inventory #01";
     }
 
 
     function registerNewTypeOfNft (
-        uint256 tokenId, string memory nameOfNFT, string memory category,  string calldata metadataHashIpfs, 
+        uint256 tokenId, string calldata nameOfNFT, string calldata category,  string calldata metadataHashIpfs, 
         uint256 maxSupply, uint256 initialPrice, bool askDateForMint,  uint256 validUntil, uint256 entriesCounter
-    ) public  onlyRole(DEFAULT_ADMIN_ROLE) whenNotPaused {
+    ) public  onlyRole(BUSINESS_ROLE) {
                 
         require(!nftInfo[tokenId].tokenIsRegistered, "TokenId was already registered");
         require ( bytes(metadataHashIpfs).length > 32, "Check the MetadataHashIPFS entry");
@@ -65,8 +74,10 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
 
         nftInfo[tokenId] = NftInfo(nameOfNFT, category, metadataHashIpfs, 
          maxSupply, initialPrice, askDateForMint, validUntil,  entriesCounter, true);  //true means tokenIsRegistered
+        
+        emit RegisterNewTypeOfNFT (nftInfo[tokenId]);
+    
     }
-
 
     function mint(address account, uint256 tokenId, uint256 amount)
         external
@@ -89,6 +100,29 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         );
     }
 
+    function changeTokenPrice(uint256 _tokenId, uint256 _newPrice) external onlyRole(BUSINESS_ROLE) {
+        require(nftInfo[_tokenId].tokenIsRegistered, "Token is not registered");
+
+        nftInfo[_tokenId].price = _newPrice;
+
+    }
+
+    function getTokenPrice(uint256 _tokenId) external view returns(uint256) {
+        require(nftInfo[_tokenId].tokenIsRegistered, "Token is not registered");
+        
+        return nftInfo[_tokenId].price;
+    }
+
+    function getAssetsOfAccount(address _account,  uint256[] calldata _tokensList ) external view returns(uint256[] memory) {
+        require(_tokensList.length != 0, "Length of array is zero");
+        
+        uint256[] memory balanceList = new uint256[](_tokensList.length);
+
+        for (uint256 i = 0; i < _tokensList.length; ++i) {
+            balanceList[i] = balanceOf(_account, _tokensList[i]);
+        }
+        return balanceList;
+    }
 
     function pause() public onlyRole(PAUSER_ROLE) {
         _pause();
@@ -97,7 +131,6 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
     function unpause() public onlyRole(PAUSER_ROLE) {
         _unpause();
     }
-
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
         internal
