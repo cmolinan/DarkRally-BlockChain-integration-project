@@ -458,3 +458,65 @@ it('Token debería  de registrarse antes del mint', async () => {
   });
 
 });
+describe("DarkRallyNFT tests", function () {
+
+  const MINTER_ROLE = getRole("MINTER_ROLE");
+  const BURNER_ROLE = getRole("BURNER_ROLE");
+  const PAUSER_ROLE = getRole("PAUSER_ROLE");
+  const UPGRADER_ROLE    = getRole("UPGRADER_ROLE");
+  const DEFAULT_ADMIN_ROLE    = getRole("0x00");
+  
+  var owner;
+  var alice;
+  var bob;
+  var darkRallyNFT;
+  var darkRallyNFTProxy;
+  var implementationAddress;
+  var metadataHashIpfs = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(('MetadataHash')));
+  beforeEach(async () => {
+    [owner, alice, bob] = await ethers.getSigners();
+    // Desplegar el contrato antes de cada prueba
+    const DarkRallyNFT = await ethers.getContractFactory("DarkRallyNFT");
+    
+    
+   
+    darkRallyNFT = await hre.upgrades.deployProxy(DarkRallyNFT, {
+      kind: "uups",
+    });
+    
+     implementationAddress = await upgrades.erc1967.
+    getImplementationAddress(darkRallyNFT.address);
+   
+  
+  });
+  
+  it("should return the correct URI for a given token ID", async () => {
+    // Set up
+    const tokenId = 1;
+    const nameOfNFT = 'MiNFT';
+    const category = 'Categoria';
+    
+    const maxSupply = 100;
+    const initialPrice = 1;
+    const askDateForMint = false;
+    const validUntil = 0;
+    const entriesCounter = 0;
+
+    await darkRallyNFT.registerNewTypeOfNft(
+      tokenId, nameOfNFT, category, metadataHashIpfs,
+      maxSupply, initialPrice, askDateForMint, validUntil, entriesCounter
+    );
+
+    
+    
+    const expectedURI = "https://ipfs.io/ipfs/" + metadataHashIpfs  ;
+
+    // Call the uri function
+    const actualURI = await darkRallyNFT.uri(tokenId);
+
+    // Assert
+    expect(actualURI).to.equal(expectedURI);
+  });
+  
+  });
+  
