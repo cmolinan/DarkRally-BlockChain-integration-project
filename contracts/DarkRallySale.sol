@@ -22,18 +22,23 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
     // DarkRallyNFT contract
     IDarkRallyNFT DarkRallyNFT_SC;  // Setter in Constructor
    
-    // Wallet for transferring USDC coins for each purchase
-    address companyWalletAddr;   // Setter in Constructor
-   
    // Prices storage:   tokenId => price 
     mapping(uint256 tokenId => uint256) public priceOfNft;
+
+    struct ScAddresses {
+        address darkRallyNft;  // Address of NFT SC
+        address usdcCoin;       // Address of usdcCoin SC
+        address companyWallet;     // Wallet for transferring USDC coins for each purchase
+    }
+
+    ScAddresses public scAddresses; // contains SC addresses
 
     //Event when new prices were registered
     event SetNftPrices(uint256[] tokenId, uint256[] price);  
 
     //Event when a purchase of NFTs was done    
-    event PurchaseOfNft(address account, uint256 tokenId, uint256 amount, uint256 coinsPaid);
-        
+    event PurchaseOfNft(address account, uint256 tokenId, uint256 amount, uint256 coinsPaid);        
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -53,14 +58,17 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
         _grantRole(PAUSER_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
         _grantRole(BUSINESS_ROLE, msg.sender);
+        
+        scAddresses.darkRallyNft = _darkRallySCnftAddress;
+        DarkRallyNFT_SC = IDarkRallyNFT(scAddresses.darkRallyNft);
 
-        USDCoin_SC = IERC20Upgradeable(_usdcSCaddress);
-        DarkRallyNFT_SC = IDarkRallyNFT(_darkRallySCnftAddress);
+        scAddresses.usdcCoin = _usdcSCaddress;
+        USDCoin_SC = IERC20Upgradeable(scAddresses.usdcCoin);
 
-        companyWalletAddr = _companyWalletAddr; 
+        scAddresses.companyWallet = _companyWalletAddr; 
     }
     
-    function setNftPrice(uint256[] memory _tokenId, uint256[] memory _price) external onlyRole(BUSINESS_ROLE) {
+    function setNftPrice(uint256[] calldata _tokenId, uint256[] calldata _price) external onlyRole(BUSINESS_ROLE) {
         require( _price.length == _tokenId.length && _price.length != 0, "Length of arrays not equal or zero");
 
         for (uint256  i = 0; i < _price.length; i++) {
@@ -81,7 +89,7 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
         require( USDCoin_SC.balanceOf(msg.sender) >= amountToPay, "Not enough USDC balance"); 
         
         //transfer coins to company Wallet
-        USDCoin_SC.transferFrom(msg.sender, companyWalletAddr, amountToPay);
+        USDCoin_SC.transferFrom(msg.sender, scAddresses.companyWallet, amountToPay);
         
         //Mint the tokens
         DarkRallyNFT_SC.mint(msg.sender, _tokenId, _amount);
@@ -89,6 +97,27 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
         // Emit event
         emit PurchaseOfNft(msg.sender, _tokenId, _amount, amountToPay);
     }
+    
+    function setNftScAddress(address _darkRallyNftAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_darkRallyNftAddr != address(0), "Address zero is invalid");
+        scAddresses.darkRallyNft = _darkRallyNftAddr;
+        DarkRallyNFT_SC = IDarkRallyNFT(scAddresses.darkRallyNft);
+    }
+
+    function setUsdcCoinScAddress(address _usdcCoinAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_usdcCoinAddr != address(0), "Address zero is invalid");
+        scAddresses.usdcCoin = _usdcCoinAddr;
+        USDCoin_SC = IERC20Upgradeable(scAddresses.usdcCoin);
+    }
+
+    function setCompanyWalletAddress(address _companyWalletAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_companyWalletAddr != address(0), "Address zero is invalid");
+        scAddresses.companyWallet = _companyWalletAddr;
+    }
+
+    ////////////////////////////////////////////////////////////////////////
+    /////////                    Helper Methods                    /////////
+    ////////////////////////////////////////////////////////////////////////
 
     function pause() public onlyRole(PAUSER_ROLE) {
         _pause();        
