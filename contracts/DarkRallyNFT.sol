@@ -8,7 +8,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155Burn
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "hardhat/console.sol";
 
 contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgradeable, 
          PausableUpgradeable, ERC1155BurnableUpgradeable, ERC1155SupplyUpgradeable, UUPSUpgradeable {
@@ -38,6 +37,9 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
     
     //Event when a new NFT is registered
     event RegisterNewTypeOfNFT (NftInfo);
+
+    //storage the list of tokens registered
+    uint256[] public tokensList;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -75,6 +77,8 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         nftInfo[tokenId] = NftInfo(nameOfNFT, category, metadataHashIpfs, 
          maxSupply, initialPrice, askDateForMint, validUntil,  entriesCounter, true);  //true means tokenIsRegistered
         
+        tokensList.push(tokenId); //push to array the new registered tokenId 
+
         emit RegisterNewTypeOfNFT (nftInfo[tokenId]);
     
     }
@@ -82,7 +86,16 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
     function deleteRegisterOfTypeOfNft (uint256 tokenId) public  onlyRole(BUSINESS_ROLE) whenPaused {
         require(nftInfo[tokenId].tokenIsRegistered, "TokenId is not registered");
         require(totalSupply(tokenId) == 0, "Not possible due TokenId already has mintages");
-        delete nftInfo[tokenId];    
+        delete nftInfo[tokenId];
+
+        //delete tokenId entry inside tokenList array
+        for (uint i=tokensList.length-1;i>=0;--i){
+            if(tokensList[i]==tokenId){
+                tokensList[i]=tokensList[tokensList.length-1];
+                tokensList.pop();                    
+                break;
+            }
+        }        
     }
 
     function mint(address account, uint256 tokenId, uint256 amount)
