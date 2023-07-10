@@ -21,8 +21,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         string nameOfNFT;  //ie: NFToy serie AA23-A   --only for show in getter function
         string category; //ie: Toys, Tickets, Tropheus, Vehicles, Skins --only for show in getter function
         string metadataHashIpfs;  //ie: QmNoLB8krmgfntxAHgaJrTE2Mf6NCPQ7ct1UvhH2pNkLeg        
-        uint256 maxSupply; //ie: 3000          
-        uint256 price; //ie 9000000  (with 6 decimals -- USDC)
+        uint256 maxSupply; //ie: 3000
         bool askDateForMint; // If true, the expiration date will be validated before minting.
         uint256 validUntil; // initially used for Tickets - expressed in epoch time        
         uint256 entriesCounter; //initially used for Tickets
@@ -66,7 +65,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
 
     function registerNewTypeOfNft (
         uint256 tokenId, string calldata nameOfNFT, string calldata category,  string calldata metadataHashIpfs, 
-        uint256 maxSupply, uint256 initialPrice, bool askDateForMint,  uint256 validUntil, uint256 entriesCounter
+        uint256 maxSupply, bool askDateForMint,  uint256 validUntil, uint256 entriesCounter
     ) public  onlyRole(BUSINESS_ROLE) {
                 
         require(!nftInfo[tokenId].tokenIsRegistered, "TokenId was already registered");
@@ -75,7 +74,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         if (askDateForMint) require ( validUntil > block.timestamp, "Expiration date must be greater than current date");
 
         nftInfo[tokenId] = NftInfo(nameOfNFT, category, metadataHashIpfs, 
-         maxSupply, initialPrice, askDateForMint, validUntil,  entriesCounter, true);  //true means tokenIsRegistered
+         maxSupply, askDateForMint, validUntil,  entriesCounter, true);  //true means tokenIsRegistered
         
         tokensList.push(tokenId); //push to array the new registered tokenId 
 
@@ -98,6 +97,24 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         }        
     }
 
+    function changeMetadataHashOfNft(uint256 _tokenId, string memory _metadataHashIpfs)  
+        external onlyRole(BUSINESS_ROLE) {
+
+        require(nftInfo[_tokenId].tokenIsRegistered, "Token is not registered");        
+        require(bytes(_metadataHashIpfs).length > 0, "MetadataHash can't be empty");
+
+        nftInfo[_tokenId].metadataHashIpfs = _metadataHashIpfs;
+    }
+
+    function changeMaxSupplyOfNft(uint256 _tokenId, uint256 _maxSupply)  
+        external onlyRole(BUSINESS_ROLE) {
+
+        require(nftInfo[_tokenId].tokenIsRegistered, "Token is not registered");
+        require(_maxSupply != 0 && nftInfo[_tokenId].maxSupply != _maxSupply, "Nothing to change");
+        
+        nftInfo[_tokenId].maxSupply = _maxSupply;
+    }
+
     function mint(address account, uint256 tokenId, uint256 amount)
         external
         onlyRole(MINTER_ROLE)
@@ -117,19 +134,6 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
                 abi.encodePacked("https://ipfs.io/ipfs/", nftInfo[_tokenId].metadataHashIpfs)
             )
         );
-    }
-
-    function changeTokenPrice(uint256 _tokenId, uint256 _newPrice) external onlyRole(BUSINESS_ROLE) {
-        require(nftInfo[_tokenId].tokenIsRegistered, "Token is not registered");
-
-        nftInfo[_tokenId].price = _newPrice;
-
-    }
-
-    function getTokenPrice(uint256 _tokenId) external view returns(uint256) {
-        require(nftInfo[_tokenId].tokenIsRegistered, "Token is not registered");
-        
-        return nftInfo[_tokenId].price;
     }
 
     function getAssetsOfAccount(address _account,  uint256[] calldata _tokensList ) external view returns(uint256[] memory) {
