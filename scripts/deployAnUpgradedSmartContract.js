@@ -6,6 +6,7 @@ async function upGradeSmartContract() {
   //write here the new Contract Name of your current Smart Contract
   const NewUpgradeableSC = await hre.ethers.getContractFactory(
     "DarkRallyNFT"
+
   );
 
   // Le decimos al contrato proxi que apunte al nuevo contrato de implementacion

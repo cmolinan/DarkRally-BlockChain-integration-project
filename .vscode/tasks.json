@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"cronTasks.tasks":[
+		{
+			"at": "30 * * * *",
+			"type": "hardhat",
+			"task": "test",
+			"group": "test",
+			"problemMatcher": [],
+			"label": "hardhat: test",
+			"run": "Run hardhat tests ./test/test.js"
+		}
+	]
+}
