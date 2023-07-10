@@ -1,12 +1,12 @@
 async function upGradeSmartContract() {
   
   //write here the Proxy Address of your current Smart Contract
-  var UpgradeableSCProxyAddress = "0x523dBB6850adCc5dCa46E26c9464924bd01eBd4F";  //DarkRallySale
-  
+  var UpgradeableSCProxyAddress = "0x8BE88F3a37A444C8D66C34654537B1a63896925D";  //DarkRallySale
+  var UpgradeableSCProxyAddress = "0x8BE88F3a37A444C8D66C34654537B1a63896925D";  //DarkRallySale
+
   //write here the new Contract Name of your current Smart Contract
   const NewUpgradeableSC = await hre.ethers.getContractFactory(
-    "DarkRallyNFT"
-
+    "xxxxxxUpgradeableToken2"
   );
 
   // Le decimos al contrato proxi que apunte al nuevo contrato de implementacion

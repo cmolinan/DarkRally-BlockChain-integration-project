@@ -20,7 +20,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
     struct NftInfo {                
         string nameOfNFT;  //ie: NFToy serie AA23-A   --only for show in getter function
         string category; //ie: Toys, Tickets, Tropheus, Vehicles, Skins --only for show in getter function
-        string metadataHashIpfs;  //ie: QmNoLB8krmgfntxAHgaJrTE2Mf6NCPQ7ct1UvhH2pNkLeg        
+        string metadataHashIpfs;  //ie: QmNoLB8krmgfntxAHgaJrTE2Mf6NCPQ7ct1UvhH2pNkLeg
         uint256 maxSupply; //ie: 3000
         bool askDateForMint; // If true, the expiration date will be validated before minting.
         uint256 validUntil; // initially used for Tickets - expressed in epoch time        
