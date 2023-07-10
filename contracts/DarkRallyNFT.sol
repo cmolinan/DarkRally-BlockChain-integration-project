@@ -79,6 +79,12 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
     
     }
 
+    function deleteRegisterOfTypeOfNft (uint256 tokenId) public  onlyRole(BUSINESS_ROLE) whenPaused {
+        require(nftInfo[tokenId].tokenIsRegistered, "TokenId is not registered");
+        require(totalSupply(tokenId) == 0, "Not possible due TokenId already has mintages");
+        delete nftInfo[tokenId];    
+    }
+
     function mint(address account, uint256 tokenId, uint256 amount)
         external
         onlyRole(MINTER_ROLE)
