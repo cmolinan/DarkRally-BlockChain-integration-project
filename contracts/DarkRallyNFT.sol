@@ -22,6 +22,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         string category; //ie: Toys, Tickets, Tropheus, Vehicles, Skins --only for show in getter function
         string metadataHashIpfs;  //ie: QmNoLB8krmgfntxAHgaJrTE2Mf6NCPQ7ct1UvhH2pNkLeg        
         uint256 maxSupply; //ie: 3000    
+        uint256 price; //
         bool askDateForMint; // If true, the expiration date will be validated before minting.
         uint256 validUntil; // initially used for Tickets - expressed in epoch time        
         uint256 entriesCounter; //initially used for Tickets
@@ -64,7 +65,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
 
 
     function registerNewTypeOfNft (
-        uint256 tokenId, string calldata nameOfNFT, string calldata category,  string calldata metadataHashIpfs, 
+        uint256 tokenId, string calldata nameOfNFT, string calldata category,  string calldata metadataHashIpfs, uint256 price,
         uint256 maxSupply, bool askDateForMint,  uint256 validUntil, uint256 entriesCounter
     ) public  onlyRole(BUSINESS_ROLE) {
                 
@@ -73,7 +74,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         require (maxSupply > 0,"Maxsupply must be greater than 0");
         if (askDateForMint) require ( validUntil > block.timestamp, "Expiration date must be greater than current date");
 
-        nftInfo[tokenId] = NftInfo(nameOfNFT, category, metadataHashIpfs, 
+        nftInfo[tokenId] = NftInfo(nameOfNFT, category, metadataHashIpfs, price,
          maxSupply, askDateForMint, validUntil,  entriesCounter, true);  //true means tokenIsRegistered
         
         tokensList.push(tokenId); //push to array the new registered tokenId 
@@ -95,6 +96,16 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
                 break;
             }
         }        
+    }
+
+    function getTokensList() external view returns(uint256[] memory) {        
+        uint256[] memory tokensListOut = new uint256[](tokensList.length);
+
+        for (uint256 i = 0; i < tokensList.length; ++i) {
+            tokensListOut[i] = tokensList[i];
+        }
+
+        return tokensListOut; 
     }
 
     function changeMetadataHashOfNft(uint256 _tokenId, string memory _metadataHashIpfs)  
