@@ -89,13 +89,15 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         delete nftInfo[tokenId];
 
         //delete tokenId entry inside tokenList array
-        for (uint i=tokensList.length-1;i>=0;--i){
-            if(tokensList[i]==tokenId){
-                tokensList[i]=tokensList[tokensList.length-1];
-                tokensList.pop();                    
-                break;
-            }
-        }        
+        if (tokensList.length > 0) {
+            for (uint256 i=tokensList.length-1;i>=0;--i){
+                if(tokensList[i]==tokenId){
+                    tokensList[i]=tokensList[tokensList.length-1];
+                    tokensList.pop();                    
+                    break;
+                }
+            }  
+        }
     }
 
     function getTokensList() external view returns(uint256[] memory) {        
@@ -106,6 +108,16 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         }
 
         return tokensListOut; 
+    }
+
+    function replaceTokensList(uint256[] calldata tokensIdArray) external onlyRole(BUSINESS_ROLE) {
+
+        delete tokensList;
+        if(tokensIdArray.length > 0) {
+            for (uint256 i = 0; i < tokensIdArray.length; ++i) {                
+                tokensList.push(tokensIdArray[i]);
+            }
+        }        
     }
 
     function changeMetadataHashOfNft(uint256 _tokenId, string memory _metadataHashIpfs)  
