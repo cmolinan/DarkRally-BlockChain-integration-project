@@ -17,8 +17,6 @@ module.exports = {
     },
   },  
 
-  
- 
   networks: {    
     mumbai: {
       url: process.env.MUMBAI_TESNET_URL,

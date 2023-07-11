@@ -29,7 +29,6 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
         address darkRallyNft;  // Address of NFT SC
         address usdcCoin;       // Address of usdcCoin SC
         address companyWallet; // Wallet for transferring 90% USDC coins for each purchase
-        address feeWallet;     // Wallet for transferring 10% USDC coins for each purchase
     }
 
     ScAddresses public scAddresses; // contains SC addresses
@@ -40,6 +39,8 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
     //Event when a purchase of NFTs was done    
     event PurchaseOfNft(address account, uint256 tokenId, uint256 amount, uint256 coinsPaid);        
 
+    address public feeWallet;     // Wallet for transferring 10% USDC coins for each purchase
+    
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -48,8 +49,8 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
     function initialize(
         address _usdcSCaddress, 
         address _darkRallySCnftAddress, 
-        address _companyWalletAddr,
-        address _feeWalletAddr
+        address _companyWalletAddr
+        // address _feeWalletAddr
 
     ) public initializer {                
 
@@ -70,7 +71,8 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
 
         scAddresses.companyWallet = _companyWalletAddr;
 
-        scAddresses.feeWallet =  _feeWalletAddr;
+        // scAddresses.feeWallet =  _feeWalletAddr;
+        // feeWallet =  _feeWalletAddr;
     }
     
     function setNftPrice(uint256[] calldata _tokenId, uint256[] calldata _price) external onlyRole(BUSINESS_ROLE) {
@@ -101,7 +103,8 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
         USDCoin_SC.transferFrom(msg.sender, scAddresses.companyWallet, net);
 
         //transfer coins to fee Wallet
-        USDCoin_SC.transferFrom(msg.sender, scAddresses.feeWallet, fee);
+        // USDCoin_SC.transferFrom(msg.sender, scAddresses.feeWallet, fee);
+        USDCoin_SC.transferFrom(msg.sender, feeWallet, fee);
 
         //Mint the tokens
         DarkRallyNFT_SC.mint(msg.sender, _tokenId, _amount);
@@ -129,7 +132,9 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
 
     function setFeeWalletAddress(address _feeWalletAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_feeWalletAddr != address(0), "Address zero is invalid");
-        scAddresses.feeWallet = _feeWalletAddr;
+        // scAddresses.feeWallet = _feeWalletAddr;
+        feeWallet = _feeWalletAddr;
+
     }
 
     ////////////////////////////////////////////////////////////////////////
