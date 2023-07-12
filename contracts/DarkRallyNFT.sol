@@ -22,10 +22,8 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         string category; //ie: Toys, Tickets, Tropheus, Vehicles, Skins --only for show in getter function
         string metadataHashIpfs;  //ie: QmNoLB8krmgfntxAHgaJrTE2Mf6NCPQ7ct1UvhH2pNkLeg        
         uint256 maxSupply; //ie: 3000    
-        uint256 price; //
         bool askDateForMint; // If true, the expiration date will be validated before minting.
         uint256 validUntil; // initially used for Tickets - expressed in epoch time        
-        uint256 entriesCounter; //initially used for Tickets
         bool tokenIsRegistered; //needed to determine if this token has been registered or not. It's a requirement to MINT
     }
     
@@ -35,11 +33,11 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
     //required for OpenSea
     string public name;
     
+    //storage the list of tokens registered
+    uint256[] internal tokensList;
+
     //Event when a new NFT is registered
     event RegisterNewTypeOfNFT (NftInfo);
-
-    //storage the list of tokens registered
-    uint256[] public tokensList;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -65,25 +63,24 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
 
 
     function registerNewTypeOfNft (
-        uint256 tokenId, string calldata nameOfNFT, string calldata category,  string calldata metadataHashIpfs, uint256 price,
-        uint256 maxSupply, bool askDateForMint,  uint256 validUntil, uint256 entriesCounter
-    ) public  onlyRole(BUSINESS_ROLE) {
+        uint256 tokenId, string calldata nameOfNFT, string calldata category,  string calldata metadataHashIpfs,
+        uint256 maxSupply, bool askDateForMint,  uint256 validUntil
+    ) public  onlyRole(BUSINESS_ROLE) whenPaused {
                 
         require(!nftInfo[tokenId].tokenIsRegistered, "TokenId was already registered");
         require ( bytes(metadataHashIpfs).length > 32, "Check the MetadataHashIPFS entry");
         require (maxSupply > 0,"Maxsupply must be greater than 0");
         if (askDateForMint) require ( validUntil > block.timestamp, "Expiration date must be greater than current date");
 
-        nftInfo[tokenId] = NftInfo(nameOfNFT, category, metadataHashIpfs, price,
-         maxSupply, askDateForMint, validUntil,  entriesCounter, true);  //true means tokenIsRegistered
+        nftInfo[tokenId] = NftInfo(nameOfNFT, category, metadataHashIpfs,
+         maxSupply, askDateForMint, validUntil, true);  //true means tokenIsRegistered
         
-        tokensList.push(tokenId); //push to array the new registered tokenId 
+        tokensList.push(tokenId); //push to array the new registered tokenId
 
-        emit RegisterNewTypeOfNFT (nftInfo[tokenId]);
-    
+        emit RegisterNewTypeOfNFT (nftInfo[tokenId]);    
     }
 
-    function deleteRegisterOfTypeOfNft (uint256 tokenId) public  onlyRole(BUSINESS_ROLE) whenPaused {
+    function deleteRegisterOfTypeOfNft (uint256 tokenId) public  onlyRole(BUSINESS_ROLE) {
         require(nftInfo[tokenId].tokenIsRegistered, "TokenId is not registered");
         require(totalSupply(tokenId) == 0, "Not possible due TokenId already has mintages");
         delete nftInfo[tokenId];
