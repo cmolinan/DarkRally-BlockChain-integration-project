@@ -36,7 +36,7 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
   mapping(bytes32 uuid => ForSaleInfo) public forSaleInfo;
 
   //storage the list of all UUID registered
-  uint256[] internal forSaleList;
+  string[] internal forSaleList;
 
   struct ScAddresses {
     address darkRallyNft;  // Address of NFT SC
@@ -86,6 +86,25 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     scAddresses.feeWallet =  _feeWalletAddr;
   }
   
+  function createSaleOffer(uint256 _tokenId, uint256 _price, uint256 _quantity) external onlyRole(BUSINESS_ROLE) {
+    //msg.sender must be the owner
+
+    string memory uuid_clear = string(abi.encodePacked(_tokenId, "_", msg.sender));
+
+    bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
+    // bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
+    require( !forSaleInfo[uuid].isRegistered, "Token is already registered");
+
+    require( _quantity > 0, "Quantity must not be zero");
+    require( _price > 0, "Price must not be zero");
+    require( DarkRallyNFT_SC.balanceOf(msg.sender, _tokenId) >= _quantity, "Don't own that quantity of tokens"); 
+
+    forSaleList.push(uuid_clear); //push to array the new Sale offer
+
+    forSaleInfo[uuid] = ForSaleInfo(_price, _quantity,forSaleList.length -1, true);
+
+  }
+
   function purchaseNft(uint256 _tokenId, address _owner, uint256 _price, uint256 _quantity) external whenNotPaused {
 
     //remember that msg.sender is the buyer
@@ -138,8 +157,8 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     emit PurchaseNft(_tokenId, _owner, msg.sender, _quantity, amountToPay);
   }
 
-  function getSalesList() external view returns(uint256[] memory) {        
-    uint256[] memory forSaleListOut = new uint256[](forSaleList.length);
+  function getSalesList() external view returns(string[] memory) {        
+    string[] memory forSaleListOut = new string[](forSaleList.length);
 
     for (uint256 i = 0; i < forSaleList.length; ++i) {
         forSaleListOut[i] = forSaleList[i];
