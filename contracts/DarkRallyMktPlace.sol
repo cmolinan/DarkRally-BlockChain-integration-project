@@ -148,6 +148,19 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     return forSaleListOut; 
   }
 
+  function updatePriceAndQuantity(uint256 _tokenId, uint256 _newPrice, uint256 _newQuantity) external onlyRole(BUSINESS_ROLE) {
+    //msg.sender must be the owner
+    
+    bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
+    require( forSaleInfo[uuid].isRegistered, "Token not registered for Sale"); 
+    require( _newPrice != forSaleInfo[uuid].price || _newQuantity != forSaleInfo[uuid].quantity, "Nothing to change");
+    require( DarkRallyNFT_SC.balanceOf(msg.sender, _tokenId) >= _newQuantity, "Doesn't have that quantity of tokens!");
+
+    forSaleInfo[uuid].price = _newPrice;
+    forSaleInfo[uuid].quantity = _newQuantity;
+
+  }
+
   function setNftScAddress(address _darkRallyNftAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
     require(_darkRallyNftAddr != address(0), "Address zero is invalid");
     scAddresses.darkRallyNft = _darkRallyNftAddr;
