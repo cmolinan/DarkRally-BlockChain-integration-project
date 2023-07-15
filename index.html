@@ -61,7 +61,34 @@
         Quantity to Sale:<input type="number" id="createQuantity" name="quantityInput"><br>
         <button id="createOfferButton">Create Offer</button>
         <br>
-        <span id="createMsg" style="color: red;"></span>
+        <span id="createMsg" style="color: red;"></span>        
+
+        <span style="color: blue;">
+        When a sale offer is created, it is also necessary to provide approval 
+        to the MarketPlace Smnart Contract to carry out the transaction at the 
+        time someone buys.
+        </span> <br><br>
+
+        <label for="approveNftInput" class="subCategory">Approve for all NFT</label>
+        <button id="approveNftButton">Approve</button>
+        <br>
+        <span id="approveNftMsg" style="color: red;"></span>
+        <br>
+
+        <label for="rApproveNftInput" class="subCategory">Remove approve for all NFT</label>
+        <button id="rApproveNftButton">Remove Approve</button>
+        <br>
+        <span id="rApproveNftMsg" style="color: red;"></span>
+        <br>
+
+        <div>
+            <label>Have approved this account to all NFTs?: </label>
+            <span id="approveAllowance"></span>
+            <button id="approveAllowanceButton">Refresh</button>
+        </div>
+
+        
+
     </div>
 
     <div class="divListSaleOffers">

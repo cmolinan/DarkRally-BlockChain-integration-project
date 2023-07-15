@@ -88,7 +88,7 @@ function setUpListeners() {
   });
 
 
-  // Approve MiPrimerToken
+  // Approve USDC
   var approveErr = document.getElementById("approveError");
   var approveBtn = document.getElementById("approveButton");
   
@@ -157,6 +157,88 @@ function setUpListeners() {
     createBtn.disabled = false;    
     
   });
+
+  // Approval for All NFT
+  var approveNftMsg = document.getElementById("approveNftMsg");
+  var approveNftBtn = document.getElementById("approveNftButton");
+
+  approveNftBtn.addEventListener("click", async function () {
+    approveNftBtn.disabled = true;
+    approveNftMsg.innerText ="";
+
+    try {
+      approveNftMsg.innerText = "...connecting to Wallet";
+      
+      var tx = await nftTknContract
+        .connect(signer)
+        .setApprovalForAll("0xd3779F7cD157aF082F55b98ccF1370CE400bc814", true);
+        approveNftMsg.innerText = "...transaction sent. Please wait";
+      var response = await tx.wait();
+      var transactionHash = response.transactionHash;
+      console.log("Tx Hash", transactionHash);
+      approveNftMsg.innerText = "Approve confirmed\nHash: " + transactionHash;
+      rApproveNftBtn.disabled = true;
+      approveAllowanceBtn.click();
+    } catch (error) {
+      console.log(error.reason);
+      approveNftMsg.innerText=error.reason;
+    }
+    approveNftBtn.disabled = false;    
+    
+  });
+
+
+  // Remove Approval for All NFT
+  var rApproveNftMsg = document.getElementById("rApproveNftMsg");
+  var rApproveNftBtn = document.getElementById("rApproveNftButton");
+
+  rApproveNftBtn.addEventListener("click", async function () {
+    rApproveNftBtn.disabled = true;
+    rApproveNftMsg.innerText ="";
+
+    try {
+      rApproveNftMsg.innerText = "...connecting to Wallet";
+      
+      var tx = await nftTknContract
+        .connect(signer)
+        .setApprovalForAll("0xd3779F7cD157aF082F55b98ccF1370CE400bc814", false);
+        rApproveNftMsg.innerText = "...transaction sent. Please wait";
+      var response = await tx.wait();
+      var transactionHash = response.transactionHash;
+      console.log("Tx Hash", transactionHash);
+      rApproveNftMsg.innerText = "Remove approved confirmed\nHash: " + transactionHash;
+      approveAllowanceBtn.click();
+      approveNftBtn.disabled = true;
+
+    } catch (error) {
+      console.log(error.reason);
+      rApproveNftMsg.innerText=error.reason;
+    }
+    rApproveNftBtn.disabled = false;    
+    
+  });
+  
+  
+   //Check approval for all NFT in DarkRalleNFT SC for this Contract
+   var approveAllowanceBtn = document.getElementById("approveAllowanceButton");
+   var approveAllowancePrint = document.getElementById("approveAllowance");
+ 
+   approveAllowanceBtn.addEventListener("click", async function () {  
+     try {
+       approveAllowancePrint.innerText = "";
+
+       //The question is for DarkRallyNFT SC about this Contract
+       var res = await nftTknContract.isApprovedForAll(account, '0xd3779F7cD157aF082F55b98ccF1370CE400bc814');
+            
+       approveAllowancePrint.innerText =  res ? "YES" :"NO";  //true or false
+       approveNftBtn.disabled = res;
+       rApproveNftBtn.disabled = !res;
+ 
+     } catch (error) {
+       console.log(error.reason);
+     }
+   });
+   
  
   // List All Sale Offers
   var listMsg = document.getElementById("listMsg");
