@@ -50,9 +50,10 @@
     </div>
     </br>
 
-    <h2>MarketPlace</h2> 
+    <!-- <h2>MarketPlace</h2>  -->
     
-    <h4>Sale Offer: Create, List, Update and Remove</h4>
+    <h2>Sale Offers: Create, List, Update and Remove</h2>
+
     <div class="divCreateOffer">
         <label for="createInput" class="subCategory">* Create a Sale Offer</label><br><br>
         Token Id:<input type="number" id="createTokenId" name="tokenIdInput" maxLength = "4" placeholder="NFT Id" required>&nbsp
@@ -63,31 +64,52 @@
         <span id="createMsg" style="color: red;"></span>
     </div>
 
+    <div class="divListSaleOffers">
+        <label class="subCategory">* Get Sale Offers:</label>
+        <!-- <span id="usdcAllowance"></span> -->
+        <button id="getSaleOffersButton">Refresh</button>
+    <!-- </div> -->
+    <br>
+    <span id="listMsg" style="color: red;"></span><br>
 
-    <div>
-        <label for="purchaseInput">Purchase By Id</label>
-        <input type="text" id="purchaseInput" name="purchaseInput">
-        <button id="purchaseButton">Purchase</button>
-        <br>
-        <span id="purchaseMsg" style="color: red;"></span>
-    </div>
-
-    </br>
-    <div>
-        <label>Purchase Nft (with Ether)</label>
-        <button id="purchaseEthButton">Purchase with Ether</button>
-        <br>
-        <span id="purchaseEthError" style="color: red;"></span>
-    </div>
-
-    </br>
-    <h2> Tokens Purchased </h2>
-
-    <div>
-        <label>List of purchased Tokens (in this session):</label>
+    <!-- <div> -->
+        <label>Sale offers:</label>
         <br>        
-        <div id="nftList" style="color: blue;"></div>
+        <ul id="saleOfferstList" style="color: rgb(6, 6, 99);"></ul>
     </div>  
+
+    <div class="divModifyOffer">
+        <label for="modifyInput" class="subCategory">* Update a Sale Offer</label><br><br>
+        Token Id:<input type="number" id="modifyTokenId" name="tokenIdInput" maxLength = "4" placeholder="NFT Id" required>&nbsp
+        Sale Price:<input type="number" id="modifyPrice" name="priceInput" maxLength = "14" placeholder="with 6 decimals" required>&nbsp
+        Quantity to Sale:<input type="number" id="modifyQuantity" name="quantityInput"><br>
+        <button id="modifyOfferButton">Modify Offer</button>
+        <br>
+        <span id="modifyMsg" style="color: red;"></span>
+    </div>
+
+    <div class="divRemoveOffer">
+        <label for="removeInput" class="subCategory">* Remove a Sale Offer</label><br><br>
+        Token Id:<input type="number" id="removeTokenId" name="tokenIdInput" maxLength = "4" placeholder="NFT Id" required>&nbsp
+        <button id="removeOfferButton">Remove Offer</button>
+        <br>
+        <span id="removeMsg" style="color: red;"></span>
+    </div>    
+    </br>
+
+    <h2>Purchase NFT</h2>
+
+    <div class="divBuyOffer">
+        <label for="buyInput" class="subCategory">* Purchase</label><br><br>
+        Token Id:<input type="number" id="buyTokenId" name="tokenIdInput" maxLength = "4" placeholder="NFT Id" required>&nbsp
+        Owner:<input type="text" id="buyOwner" name="ownerInput" maxLength = "46" placeholder="Address" required>&nbsp <br><br>
+        Price:<input type="number" id="buyPrice" name="priceInput" maxLength = "14" placeholder="with 6 decimals" required>&nbsp
+        Quantity:<input type="number" id="buyQuantity" name="quantityInput"><br>
+        <button id="buyOfferButton">Purchase</button>
+        <br>
+        <span id="buyMsg" style="color: red;"></span>
+    </div>
+       
 
 </body>
 

@@ -137,15 +137,9 @@ function setUpListeners() {
     var priceInput = document.getElementById("createPrice");
     var quantityInput = document.getElementById("createQuantity");
 
-    // if (tokenIdInput.value == 0) {
-    //   createMsg.innerText ="Enter a valid Id";
-    //   createBtn.disabled = false;
-    //   return
-    // }
-
     try {
       createMsg.innerText = "...connecting to Wallet";
-      console.log(priceInput.value);
+      
       var tx = await mktSContract
         .connect(signer)
         .createSaleOffer(tokenIdInput.value,priceInput.value,quantityInput.value);
@@ -155,99 +149,160 @@ function setUpListeners() {
       console.log("Tx Hash", transactionHash);
       createMsg.innerText = "Create confirmed\nHash: " + transactionHash;
       tokenIdInput.value = "";
+      listBtn.click();
     } catch (error) {
       console.log(error.reason);
       createMsg.innerText=error.reason;
     }
-    createBtn.disabled = false;
+    createBtn.disabled = false;    
+    
   });
  
-  // Purchase a Token By ID
-  var purchaseMsg = document.getElementById("purchaseMsg");
-  var purchaseBtn = document.getElementById("purchaseButton");
+  // List All Sale Offers
+  var listMsg = document.getElementById("listMsg");
+  var listBtn = document.getElementById("getSaleOffersButton");
+  var listList = document.getElementById("saleOfferstList");
 
-  purchaseBtn.addEventListener("click", async function () {
-    purchaseBtn.disabled = true;
-    purchaseMsg.innerText ="";
-    var tknIdInput = document.getElementById("purchaseInput");
-    if (tknIdInput.value == "") {
-      purchaseMsg.innerText ="Enter a valid Id";
-      purchaseBtn.disabled = false;
-      return
+  listBtn.addEventListener("click", async function () {
+    listBtn.disabled = true;
+    listMsg.innerText ="";
+    listList.innerHTML = "";
+
+    try {      
+      listMsg.innerText = "...transaction sent. Please wait";      
+      var res = await mktSContract.getSalesList();
+      listMsg.innerText = "";      
+          
+      var child = document.createElement("li");
+      child.innerText = `Token--Owner--------------------------------------Qty--Price`;
+      listList.appendChild(child);
+      
+
+      [...res].sort().forEach(elem => {
+        var child = document.createElement("li");
+        var elem1 = elem.split("_"); 
+          
+        child.innerText = `${elem1[0]}----${elem1[1]}--${elem1[3].slice(-4)}---${elem1[2]}`;
+          listList.appendChild(child);
+      });
+  
+    } catch (error) {
+      console.log(error.reason);
+      listMsg.innerText=error.reason;
     }
+    listBtn.disabled = false;
+  });
+ 
+
+  // Modify Sale Offer
+  var modifyMsg = document.getElementById("modifyMsg");
+  var modifyBtn = document.getElementById("modifyOfferButton");
+
+  modifyBtn.addEventListener("click", async function () {
+    modifyBtn.disabled = true;
+    modifyMsg.innerText ="";
+    var tokenIdInput = document.getElementById("modifyTokenId");
+    var priceInput = document.getElementById("modifyPrice");
+    var quantityInput = document.getElementById("modifyQuantity");
 
     try {
-      purchaseMsg.innerText = "...connecting to Wallet";
+      modifyMsg.innerText = "...connecting to Wallet";
+      
       var tx = await mktSContract
         .connect(signer)
-        .purchaseNftById(tknIdInput.value.trim());
-      purchaseMsg.innerText = "...transaction sent. Please wait";
+        .updatePriceAndQuantity(tokenIdInput.value,priceInput.value,quantityInput.value);
+        modifyMsg.innerText = "...transaction sent. Please wait";
       var response = await tx.wait();
       var transactionHash = response.transactionHash;
       console.log("Tx Hash", transactionHash);
-      purchaseMsg.innerText = "Purchase confirmed for Token #" + tknIdInput.value + "\nHash: " + transactionHash;
-      tknIdInput.value = "";
+      modifyMsg.innerText = "Update confirmed\nHash: " + transactionHash;
+      tokenIdInput.value = "";
+      listBtn.click();
     } catch (error) {
       console.log(error.reason);
-      purchaseMsg.innerText=error.reason;
+      modifyMsg.innerText=error.reason;
     }
-    purchaseBtn.disabled = false;
-  });
- 
-  // Purchase NFT (with Ether)
-  var purchaseEthBtn = document.getElementById("purchaseEthButton");
-  var purchaseEthErr = document.getElementById("purchaseEthError");
-
-  purchaseEthBtn.addEventListener("click", async function () {  
-    purchaseEthBtn.disabled = true;
-    try {
-      purchaseEthErr.innerText = "...connecting to Wallet";    
-      var tx = await mktSContract
-      .connect(signer)
-      .depositEthForARandomNft({
-        value: '10000000000000000',
-      });
-      purchaseEthErr.innerText = "...transaction sent. Please wait";
-      var response = await tx.wait();
-
-      var transactionHash = response.transactionHash;
-      purchaseEthErr.innerText = "Purchased confirmed with Hash: " + transactionHash;
-      
-      console.log(transactionHash);      
-
-    } catch (error) {
-      console.log(error.reason);
-    }
-    purchaseEthBtn.disabled = false;
-  });
-
-
-}
-
-// Setup for receive events of PublicSale Contract
-var showListOfTokens = document.getElementById("nftList");
-function setUpEventsContracts() {  
-  mktSContract.on("DeliverNft", (winnerAccount, nftId) => {
-    var tokenNum = ethers.utils.formatUnits(nftId, 0);
+    modifyBtn.disabled = false;    
     
-    var child = document.createElement("li");
-    child.innerText = `Token #${tokenNum} was purchased by: ${winnerAccount}`;
-    showListOfTokens.appendChild(child);
-
-    console.log("Account", winnerAccount);
-    console.log("Token #", tokenNum);
   });
+
+
+    // Remove Sale Offer
+    var removeMsg = document.getElementById("removeMsg");
+    var removeBtn = document.getElementById("removeOfferButton");
+  
+    removeBtn.addEventListener("click", async function () {
+      removeBtn.disabled = true;
+      removeMsg.innerText ="";
+      var tokenIdInput = document.getElementById("removeTokenId");
+  
+      try {
+        removeMsg.innerText = "...connecting to Wallet";        
+        var tx = await mktSContract
+          .connect(signer)
+          .removeSaleOffer(tokenIdInput.value);
+          removeMsg.innerText = "...transaction sent. Please wait";
+        var response = await tx.wait();
+        var transactionHash = response.transactionHash;
+        console.log("Tx Hash", transactionHash);
+        removeMsg.innerText = "Remove confirmed\nHash: " + transactionHash;
+        tokenIdInput.value = "";
+        listBtn.click();
+      } catch (error) {
+        console.log(error.reason);
+        removeMsg.innerText=error.reason;
+      }
+      removeBtn.disabled = false;    
+      
+    });
+  
+    // Purchase a NFT
+  var buyMsg = document.getElementById("buyMsg");
+  var buyBtn = document.getElementById("buyOfferButton");
+
+  buyBtn.addEventListener("click", async function () {
+    buyBtn.disabled = true;
+    buyMsg.innerText ="";
+    var tokenIdInput = document.getElementById("buyTokenId");
+    var priceInput = document.getElementById("buyPrice");
+    var quantityInput = document.getElementById("buyQuantity");
+    var ownerInput = document.getElementById("buyOwner");
+
+    try {
+      buyMsg.innerText = "...connecting to Wallet";
+      
+      var tx = await mktSContract
+        .connect(signer)
+        .purchaseNft(tokenIdInput.value, ownerInput.value, priceInput.value,quantityInput.value);
+      buyMsg.innerText = "...transaction sent. Please wait";
+      var response = await tx.wait();
+      var transactionHash = response.transactionHash;
+      console.log("Tx Hash", transactionHash);
+      buyMsg.innerText = "Update confirmed\nHash: " + transactionHash;
+      tokenIdInput.value = "";
+      listBtn.click();
+    } catch (error) {
+      console.log(error.reason);
+      buyMsg.innerText=error.reason;
+    }
+    buyBtn.disabled = false;    
+    
+  });
+
+    
+  
 
 }
 
-  
+ 
 async function setUp() {
 
   setUpListeners();  
   initSCs();
+
   // initSCsMumbai();
 
-  setUpEventsContracts();
+  //setUpEventsContracts();
 }
 
 setUp()

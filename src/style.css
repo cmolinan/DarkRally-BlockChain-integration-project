@@ -2,12 +2,13 @@ body {
   box-sizing: border-box;
   font-family: 'Roboto', sans-serif;
   font-size: 14px;
-  padding: 5% 20px;
+  padding: 1% 20px;
   color: black;
   background-color: rgb(210, 219, 207);
-  width: 60%;
+  width: 40%;
   margin: auto;
   border: solid 1px black;
+  min-width: 650px;
 }
 
 #usdcBalance,
@@ -17,25 +18,49 @@ body {
 }
 
 #createTokenId,
-#createQuantity {
+#createQuantity,
+#modifyTokenId,
+#modifyQuantity,
+#buyTokenId,
+#buyQuantity {
   width: 60px;
 }
 
-#createPrice {
+#createPrice,
+#modifyPrice,
+#buyPrice {
   width: 90px;
 }
 
-#createOfferButton {
+#buyOwner {
+  width: 320px;
+}
+
+#createOfferButton,
+#modifyOfferButton,
+#removeOfferButton,
+#buyOfferButton {
   margin: 10px 150px;
   font-weight: bold;
   font-size: 14px;
 }
 
-.divCreateOffer {
+.divCreateOffer,
+.divListSaleOffers,
+.divModifyOffer,
+.divRemoveOffer,
+.divBuyOffer {
   border: 1px solid black;
   padding: 5px;
 }
 
 .subCategory {
   font-weight: bold;
+}
+
+#saleOfferstList {
+  font-family: 'Courier New', monospace;
+  list-style-type: none; /* Remove bullets */
+  padding: 0; /* Remove padding */
+  margin: 0; /* Remove margins */
 }
