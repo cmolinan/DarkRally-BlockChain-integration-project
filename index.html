@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>
+        MARKETPLACE
+    </title>
+</head>
+
+<body>
+    <div>
+        <h1>DARK RALLY MARKETPLACE</h1>
+    </div>
+
+    <div>
+        <label>
+            <button id="connect">Conectar con Metamask</button>
+        </label>
+        <span id="account"></span>        
+    </div>
+
+    <!-- </br>
+    <div>
+        <button id="switch">Cambiar a Mumbai</button>
+    </div> -->
+
+    </br>
+    <h2>Balance and Approve USDC</h2>
+    <div>
+        <label>USDC Balance:</label>
+        <span id="usdcBalance"></span>
+        <button id="usdcUpdateButton">Refresh</button>
+    </div>
+
+
+    <div>
+        <label>USDC Allowance:</label>
+        <span id="usdcAllowance"></span>
+        <button id="usdcAllowanceButton">Refresh</button>
+    </div>
+
+
+    <div>
+        <label for="approveInput">Approve USDC</label>
+        <input type="text" id="approveInput" name="approveInput">
+        <button id="approveButton">Approve</button>
+        <br>
+        <span id="approveError" style="color: red;"></span>
+    </div>
+    </br>
+
+    <h2>MarketPlace</h2> 
+    
+    <h4>Sale Offer: Create, List, Update and Remove</h4>
+    <div class="divCreateOffer">
+        <label for="createInput" class="subCategory">* Create a Sale Offer</label><br><br>
+        Token Id:<input type="number" id="createTokenId" name="tokenIdInput" maxLength = "4" placeholder="NFT Id" required>&nbsp
+        Sale Price:<input type="number" id="createPrice" name="priceInput" maxLength = "14" placeholder="with 6 decimals" required>&nbsp
+        Quantity to Sale:<input type="number" id="createQuantity" name="quantityInput"><br>
+        <button id="createOfferButton">Create Offer</button>
+        <br>
+        <span id="createMsg" style="color: red;"></span>
+    </div>
+
+
+    <div>
+        <label for="purchaseInput">Purchase By Id</label>
+        <input type="text" id="purchaseInput" name="purchaseInput">
+        <button id="purchaseButton">Purchase</button>
+        <br>
+        <span id="purchaseMsg" style="color: red;"></span>
+    </div>
+
+    </br>
+    <div>
+        <label>Purchase Nft (with Ether)</label>
+        <button id="purchaseEthButton">Purchase with Ether</button>
+        <br>
+        <span id="purchaseEthError" style="color: red;"></span>
+    </div>
+
+    </br>
+    <h2> Tokens Purchased </h2>
+
+    <div>
+        <label>List of purchased Tokens (in this session):</label>
+        <br>        
+        <div id="nftList" style="color: blue;"></div>
+    </div>  
+
+</body>
+
+</html>

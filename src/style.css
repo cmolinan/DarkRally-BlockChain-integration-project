@@ -1,0 +1,41 @@
+body {
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  padding: 5% 20px;
+  color: black;
+  background-color: rgb(210, 219, 207);
+  width: 60%;
+  margin: auto;
+  border: solid 1px black;
+}
+
+#usdcBalance,
+#usdcAllowance,
+#account {
+  font-weight: bold;
+}
+
+#createTokenId,
+#createQuantity {
+  width: 60px;
+}
+
+#createPrice {
+  width: 90px;
+}
+
+#createOfferButton {
+  margin: 10px 150px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.divCreateOffer {
+  border: 1px solid black;
+  padding: 5px;
+}
+
+.subCategory {
+  font-weight: bold;
+}
