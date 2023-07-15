@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 interface IDarkRallyNFT {    
   function safeTransferFrom(address from, address to, uint256 id, uint256 value, bytes calldata data) external;
@@ -26,6 +27,8 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
 
   // Struct for Sale Info
   struct ForSaleInfo {
+    uint256 tokenId;
+    address owner;
     uint256 price;
     uint256 quantity;
     uint256 arrayIndex;
@@ -33,7 +36,7 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
   }
 
   // List of NFT to sale -> uuid is obtained with  tokenId + '_' + owner
-  mapping(bytes32 uuid => ForSaleInfo) public forSaleInfo;
+  mapping(bytes32 uuid => ForSaleInfo) internal forSaleInfo;
 
   //storage the list of all UUID registered
   string[] internal forSaleList;
@@ -86,10 +89,8 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     scAddresses.feeWallet =  _feeWalletAddr;
   }
   
-  function createSaleOffer(uint256 _tokenId, uint256 _price, uint256 _quantity) external onlyRole(BUSINESS_ROLE) {
+  function createSaleOffer(uint256 _tokenId, uint256 _price, uint256 _quantity) external {
     //msg.sender must be the owner
-
-    string memory uuid_clear = string(abi.encodePacked(_tokenId, "_", msg.sender));
 
     bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
     // bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
@@ -99,11 +100,30 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     require( _price > 0, "Price must not be zero");
     require( DarkRallyNFT_SC.balanceOf(msg.sender, _tokenId) >= _quantity, "Don't own that quantity of tokens"); 
 
-    forSaleList.push(uuid_clear); //push to array the new Sale offer
+    forSaleList.push("new"); //push to array only to create index
 
-    forSaleInfo[uuid] = ForSaleInfo(_price, _quantity,forSaleList.length -1, true);
+    forSaleInfo[uuid] = ForSaleInfo(_tokenId, msg.sender, _price, _quantity, forSaleList.length -1, true);
+
+    updateForSaleListArray(uuid);
 
   }
+
+  function updateForSaleListArray(bytes32 uuid) internal {
+    uint256 _tokenId = forSaleInfo[uuid].tokenId;
+    address _owner = forSaleInfo[uuid].owner;
+    uint256 _price = forSaleInfo[uuid].price;
+    uint256 _quantity = forSaleInfo[uuid].quantity;
+
+    string memory infoUpdated  = string.concat(
+        Strings.toString(_tokenId), "_", 
+        Strings.toHexString(uint160(_owner), 20), "_", 
+        Strings.toString(_price), "_", 
+        Strings.toString(_quantity)
+        );
+
+    forSaleList[forSaleInfo[uuid].arrayIndex] = infoUpdated; //push to array the new Sale offer
+  }
+
 
   function purchaseNft(uint256 _tokenId, address _owner, uint256 _price, uint256 _quantity) external whenNotPaused {
 
@@ -113,14 +133,14 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
 
     bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", _owner));   //obtain uuid         
 
-    require(forSaleInfo[uuid].isRegistered, "Uuid not exists");
+    require(forSaleInfo[uuid].isRegistered, "Token is not for sale");
     require(forSaleInfo[uuid].price == _price, "Price is different that registered");
     
     uint256 maxQuantityToSale = forSaleInfo[uuid].quantity;
-    require(_quantity != 0 && maxQuantityToSale >= _quantity, "Price is different that registered");
+    require(_quantity != 0 && maxQuantityToSale >= _quantity, "That quantity is not authorized to sale");
 
     // verify USDC Coin
-    require( USDCoin_SC.allowance(msg.sender, address(this)) >= _price, "Not enough allowance for this SC");
+    require( USDCoin_SC.allowance(msg.sender, address(this)) >= _price, "Not enough USDC allowance for this SC");
     require( USDCoin_SC.balanceOf(msg.sender) >= _price, "Not enough USDC balance");
     
     // calculations of transfers
@@ -144,6 +164,8 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     //update mapping and array
     if (maxQuantityToSale - _quantity > 0) {
       forSaleInfo[uuid].quantity = maxQuantityToSale - _quantity;
+      updateForSaleListArray(uuid);
+
     } else {          
       //delete all about this uuid
 
@@ -167,7 +189,7 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     return forSaleListOut; 
   }
 
-  function updatePriceAndQuantity(uint256 _tokenId, uint256 _newPrice, uint256 _newQuantity) external onlyRole(BUSINESS_ROLE) {
+  function updatePriceAndQuantity(uint256 _tokenId, uint256 _newPrice, uint256 _newQuantity) external {
     //msg.sender must be the owner
     
     bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
@@ -177,10 +199,11 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
 
     forSaleInfo[uuid].price = _newPrice;
     forSaleInfo[uuid].quantity = _newQuantity;
+    updateForSaleListArray(uuid);
 
   }
 
-  function removeSaleOffer(uint256 _tokenId) external onlyRole(BUSINESS_ROLE) {
+  function removeSaleOffer(uint256 _tokenId) external {
     //msg.sender must be the owner
     
     bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
