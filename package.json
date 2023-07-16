@@ -1,7 +1,8 @@
 {
   "name": "hardhat-project",
   "scripts": {
-    "start": "webpack server --open"
+    "start": "webpack server --open",
+    "build": "webpack"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
