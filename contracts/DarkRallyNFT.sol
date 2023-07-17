@@ -73,7 +73,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         if (askDateForMint) require ( validUntil > block.timestamp, "Expiration date must be greater than current date");
 
         nftInfo[tokenId] = NftInfo(nameOfNFT, category, metadataHashIpfs,
-         maxSupply, askDateForMint, validUntil, true);  //true means tokenIsRegistered
+        maxSupply, askDateForMint, validUntil, true);  //true means tokenIsRegistered
         
         tokensList.push(tokenId); //push to array the new registered tokenId
 
