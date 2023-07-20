@@ -34,7 +34,7 @@ function setUpListeners() {
   function handleAccountsChanged(accounts) {
     // Handle new accounts, or lack thereof.
     accountMsg.innerHTML = "";
-    if (account == undefined)  connectErr.innerHTML = "Not connected to Mumbai!" 
+    // if (account == undefined)  connectErr.innerHTML = "Not connected to Mumbai!" 
     // connectErr.innerHTML = "Account changed!"
     console.log("accounts", accounts);
 
