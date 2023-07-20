@@ -31,21 +31,66 @@ function initSCs() {
 function setUpListeners() {
   // Connect to Metamask
 
-  var bttn = document.getElementById("connect");
-  bttn.addEventListener("click", async function () {
-    if (window.ethereum) {
-      document.getElementById("account").innerHTML = "";
-      [account] = await ethereum.request({
-        method: "eth_requestAccounts",
-      });
-            
-      console.log("Billetera metamask", account);
+  function handleAccountsChanged(accounts) {
+    // Handle new accounts, or lack thereof.
+    accountMsg.innerHTML = "";
+    if (account == undefined)  connectErr.innerHTML = "Not connected to Mumbai!" 
+    // connectErr.innerHTML = "Account changed!"
+    console.log("accounts", accounts);
 
-      provider = new providers.Web3Provider(window.ethereum);
-      signer = provider.getSigner(account);
-      window.signer = signer;
+  }
+  
+  async function handleChainChanged(chain) {
+    // Handle new accounts, or lack thereof.
+    accountMsg.innerHTML = "";
+    
+    const chainId1 = await window.ethereum.request({ method: 'eth_chainId' });
+    if (chainId1 !== '0x13881')  connectErr.innerHTML = "Not connected to Mumbai!" 
+    else connectErr.innerHTML = "";
+    console.log("CHAIN:", chain);
 
-      document.getElementById("account").innerHTML = account;
+  }
+
+  function handleConnect(chain) {
+    // Handle new accounts, or lack thereof.
+    console.log("CHAIN Connection:", chain);
+  }
+
+  window.ethereum.on('connect', handleConnect);
+  window.ethereum.on('accountsChanged', handleAccountsChanged);  
+  window.ethereum.on('chainChanged', handleChainChanged);
+
+  var connectBtn = document.getElementById("connect");
+  var connectErr = document.getElementById("connectError");
+  var accountMsg = document.getElementById("account");
+  connectBtn.addEventListener("click", async function () {
+    eraseAllErrorMsgs();
+    try{
+      if (window.ethereum) {
+        //verify it's in Mumbai testNet
+        connectErr.innerText = "";        
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (chainId == '0x13881') {
+
+          accountMsg.innerHTML = "";
+          [account] = await ethereum.request({
+            method: "eth_requestAccounts",
+          });
+                
+          console.log("Billetera metamask", account);
+
+          provider = new providers.Web3Provider(window.ethereum);
+          signer = provider.getSigner(account);
+          window.signer = signer;
+
+          accountMsg.innerHTML = account;
+
+        } else connectErr.innerText = "Please connect your wallet to MUMBAI Testnet!";
+      
+      };
+    } catch (error) {
+      connectErr.innerText=error.message ;
+      console.log(error.message);
     }
   });
   
@@ -54,6 +99,10 @@ function setUpListeners() {
   var usdcValuePrint = document.getElementById("usdcBalance");
 
   usdcBalanceBtn.addEventListener("click", async function () {  
+    if (account == undefined) {
+      usdcValuePrint.innerText = "Not connected! ";
+      return;
+    }
     try {
       usdcValuePrint.innerText = "";
       var res = await usdcTkContract.balanceOf(account);
@@ -74,6 +123,10 @@ function setUpListeners() {
   var usdcAllowancePrint = document.getElementById("usdcAllowance");
 
   usdcAllowanceBtn.addEventListener("click", async function () {  
+    if (account == undefined) {
+      usdcAllowancePrint.innerText = "Not connected! ";
+      return;
+    }
     try {
       usdcAllowancePrint.innerText = "";
       var res = await usdcTkContract.allowance(account, '0xd3779F7cD157aF082F55b98ccF1370CE400bc814');
@@ -94,7 +147,12 @@ function setUpListeners() {
   
   approveErr.innerText ="(amount with 6 decimals! -> 000000 )";
 
-  approveBtn.addEventListener("click", async function () {       
+  approveBtn.addEventListener("click", async function () {  
+    if (account == undefined) {
+      approveErr.innerText = "Not connected! ";
+      return;
+    }
+
     approveBtn.disabled = true;
 
     approveErr.innerText = "...connecting to Wallet";
@@ -131,6 +189,11 @@ function setUpListeners() {
   var createBtn = document.getElementById("createOfferButton");
 
   createBtn.addEventListener("click", async function () {
+    if (account == undefined) {
+      createMsg.innerText = "Not connected! ";
+      return;
+    }
+
     createBtn.disabled = true;
     createMsg.innerText ="";
     var tokenIdInput = document.getElementById("createTokenId");
@@ -163,6 +226,11 @@ function setUpListeners() {
   var approveNftBtn = document.getElementById("approveNftButton");
 
   approveNftBtn.addEventListener("click", async function () {
+    if (account == undefined) {
+      approveNftMsg.innerText = "Not connected! ";
+      return;
+    }
+
     approveNftBtn.disabled = true;
     approveNftMsg.innerText ="";
 
@@ -193,6 +261,11 @@ function setUpListeners() {
   var rApproveNftBtn = document.getElementById("rApproveNftButton");
 
   rApproveNftBtn.addEventListener("click", async function () {
+    if (account == undefined) {
+      rApproveNftMsg.innerText = "Not connected! ";
+      return;
+    }
+
     rApproveNftBtn.disabled = true;
     rApproveNftMsg.innerText ="";
 
@@ -224,6 +297,11 @@ function setUpListeners() {
    var approveAllowancePrint = document.getElementById("approveAllowance");
  
    approveAllowanceBtn.addEventListener("click", async function () {  
+    if (account == undefined) {
+      approveAllowancePrint.innerText = "Not connected! ";
+      return;
+    }
+
      try {
        approveAllowancePrint.innerText = "";
 
@@ -246,6 +324,11 @@ function setUpListeners() {
   var listList = document.getElementById("saleOfferstList");
 
   listBtn.addEventListener("click", async function () {
+    if (account == undefined) {
+      listMsg.innerText = "Not connected! ";
+      return;
+    }
+
     listBtn.disabled = true;
     listMsg.innerText ="";
     listList.innerHTML = "";
@@ -281,6 +364,11 @@ function setUpListeners() {
   var modifyBtn = document.getElementById("modifyOfferButton");
 
   modifyBtn.addEventListener("click", async function () {
+    if (account == undefined) {
+      modifyMsg.innerText = "Not connected! ";
+      return;
+    }
+
     modifyBtn.disabled = true;
     modifyMsg.innerText ="";
     var tokenIdInput = document.getElementById("modifyTokenId");
@@ -314,6 +402,11 @@ function setUpListeners() {
     var removeBtn = document.getElementById("removeOfferButton");
   
     removeBtn.addEventListener("click", async function () {
+      if (account == undefined) {
+        removeMsg.innerText = "Not connected! ";
+        return;
+      }
+  
       removeBtn.disabled = true;
       removeMsg.innerText ="";
       var tokenIdInput = document.getElementById("removeTokenId");
@@ -343,6 +436,11 @@ function setUpListeners() {
   var buyBtn = document.getElementById("buyOfferButton");
 
   buyBtn.addEventListener("click", async function () {
+    if (account == undefined) {
+      buyMsg.innerText = "Not connected! ";
+      return;
+    }
+
     buyBtn.disabled = true;
     buyMsg.innerText ="";
     var tokenIdInput = document.getElementById("buyTokenId");
@@ -372,6 +470,20 @@ function setUpListeners() {
   });
 
     
+  function eraseAllErrorMsgs(){
+    connectErr.innerHTML = "";
+    usdcValuePrint.innerText = "";
+    usdcAllowancePrint.innerText = "";
+    approveErr.innerText = "";
+    createMsg.innerText  = "";
+    approveNftMsg.innerText  = "";
+    rApproveNftMsg.innerText = "";
+    listMsg.innerText = "";
+    approveAllowancePrint.innerText = "";  
+    modifyMsg.innerText ="";
+    buyMsg.innerText = "";
+    removeMsg.innerText = "";
+  }
   
 
 }
