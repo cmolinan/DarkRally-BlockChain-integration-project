@@ -19,7 +19,7 @@ function initSCs() {
 
   var nftTknAdd = "0x7Eb878f9c5AEbe42a4728e2F82eAC6388A583241";
   var usdcAddress = "0x643864518D0A8ca16EeF1c827E5E370ed51721FB"; 
-  var mktSContractAdd = "0xd3779F7cD157aF082F55b98ccF1370CE400bc814";
+  var mktSContractAdd = "0xCc637e6054c4405F40678c05E41EbF9a735De961";
 
     
   nftTknContract = new Contract(nftTknAdd, nftTknAbi, provider);
@@ -129,7 +129,7 @@ function setUpListeners() {
     }
     try {
       usdcAllowancePrint.innerText = "";
-      var res = await usdcTkContract.allowance(account, '0xd3779F7cD157aF082F55b98ccF1370CE400bc814');
+      var res = await usdcTkContract.allowance(account, '0xCc637e6054c4405F40678c05E41EbF9a735De961');
       
       var value = ethers.utils.formatUnits(res, 6);
       console.log("USDC-allowance", value);
@@ -239,7 +239,7 @@ function setUpListeners() {
       
       var tx = await nftTknContract
         .connect(signer)
-        .setApprovalForAll("0xd3779F7cD157aF082F55b98ccF1370CE400bc814", true);
+        .setApprovalForAll("0xCc637e6054c4405F40678c05E41EbF9a735De961", true);
         approveNftMsg.innerText = "...transaction sent. Please wait";
       var response = await tx.wait();
       var transactionHash = response.transactionHash;
@@ -274,7 +274,7 @@ function setUpListeners() {
       
       var tx = await nftTknContract
         .connect(signer)
-        .setApprovalForAll("0xd3779F7cD157aF082F55b98ccF1370CE400bc814", false);
+        .setApprovalForAll("0xCc637e6054c4405F40678c05E41EbF9a735De961", false);
         rApproveNftMsg.innerText = "...transaction sent. Please wait";
       var response = await tx.wait();
       var transactionHash = response.transactionHash;
@@ -306,7 +306,7 @@ function setUpListeners() {
        approveAllowancePrint.innerText = "";
 
        //The question is for DarkRallyNFT SC about this Contract
-       var res = await nftTknContract.isApprovedForAll(account, '0xd3779F7cD157aF082F55b98ccF1370CE400bc814');
+       var res = await nftTknContract.isApprovedForAll(account, '0xCc637e6054c4405F40678c05E41EbF9a735De961');
             
        approveAllowancePrint.innerText =  res ? "YES" :"NO";  //true or false
        approveNftBtn.disabled = res;

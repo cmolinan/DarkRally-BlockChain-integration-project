@@ -38,8 +38,8 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
   // List of NFT to sale -> uuid is obtained with  tokenId + '_' + owner
   mapping(bytes32 uuid => ForSaleInfo) internal forSaleInfo;
 
-  //storage the list of all UUID registered
-  string[] internal forSaleList;
+  //new storage for the list of all UUID registered
+  bytes32[] public forSaleUuid;
 
   struct ScAddresses {
     address darkRallyNft;  // Address of NFT SC
@@ -55,7 +55,7 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
 
   //Event when a purchase of NFTs was done 
   event PurchaseNft(uint256 tokenId, address owner, address buyer, uint256 quantity, uint256 amountPayed);
-      
+
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
       _disableInitializers();
@@ -100,30 +100,11 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     require( _price > 0, "Price must not be zero");
     require( DarkRallyNFT_SC.balanceOf(msg.sender, _tokenId) >= _quantity, "Don't own that quantity of tokens"); 
 
-    forSaleList.push("new"); //push to array only to create index
-
-    forSaleInfo[uuid] = ForSaleInfo(_tokenId, msg.sender, _price, _quantity, forSaleList.length -1, true);
-
-    updateForSaleListArray(uuid);
+    forSaleUuid.push(uuid);
+    
+    forSaleInfo[uuid] = ForSaleInfo(_tokenId, msg.sender, _price, _quantity, forSaleUuid.length -1, true);
 
   }
-
-  function updateForSaleListArray(bytes32 uuid) internal {
-    uint256 _tokenId = forSaleInfo[uuid].tokenId;
-    address _owner = forSaleInfo[uuid].owner;
-    uint256 _price = forSaleInfo[uuid].price;
-    uint256 _quantity = forSaleInfo[uuid].quantity;
-
-    string memory infoUpdated  = string.concat(
-        Strings.toString(_tokenId), "_", 
-        Strings.toHexString(uint160(_owner), 20), "_", 
-        Strings.toString(_price), "_", 
-        Strings.toString(_quantity)
-        );
-
-    forSaleList[forSaleInfo[uuid].arrayIndex] = infoUpdated; //push to array the new Sale offer
-  }
-
 
   function purchaseNft(uint256 _tokenId, address _owner, uint256 _price, uint256 _quantity) external whenNotPaused {
 
@@ -164,13 +145,19 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     //update mapping and array
     if (maxQuantityToSale - _quantity > 0) {
       forSaleInfo[uuid].quantity = maxQuantityToSale - _quantity;
-      updateForSaleListArray(uuid);
 
     } else {          
-      //delete all about this uuid
 
-      forSaleList[forSaleInfo[uuid].arrayIndex] = forSaleList[forSaleList.length-1];
-      forSaleList.pop();
+      //Uuid of arrays's last_value 
+      bytes32 uuidFromLast = forSaleUuid[forSaleUuid.length-1]; 
+      
+      //move UUID from last position to the position where value wiil be deleted
+      forSaleUuid[forSaleInfo[uuid].arrayIndex] = forSaleUuid[forSaleUuid.length-1]; 
+
+      //update array position for last position's UUID
+      forSaleInfo[uuidFromLast].arrayIndex = forSaleInfo[uuid].arrayIndex;
+
+      forSaleUuid.pop();
 
       delete forSaleInfo[uuid];
     }
@@ -180,10 +167,20 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
   }
 
   function getSalesList() external view returns(string[] memory) {        
-    string[] memory forSaleListOut = new string[](forSaleList.length);
+    string[] memory forSaleListOut = new string[](forSaleUuid.length);
+  
+    string memory infoSales;
+    bytes32 uuid;
+    for (uint256 i = 0; i < forSaleUuid.length; ++i) {
+      uuid = forSaleUuid[i];
+      infoSales  = string.concat(
+        Strings.toString(forSaleInfo[uuid].tokenId), "_", 
+        Strings.toHexString(uint160(forSaleInfo[uuid].owner), 20), "_", 
+        Strings.toString(forSaleInfo[uuid].price), "_", 
+        Strings.toString(forSaleInfo[uuid].quantity)
+        );
 
-    for (uint256 i = 0; i < forSaleList.length; ++i) {
-        forSaleListOut[i] = forSaleList[i];
+        forSaleListOut[i] = infoSales;
     }
 
     return forSaleListOut; 
@@ -198,8 +195,7 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     require( DarkRallyNFT_SC.balanceOf(msg.sender, _tokenId) >= _newQuantity, "Doesn't have that quantity of tokens!");
 
     forSaleInfo[uuid].price = _newPrice;
-    forSaleInfo[uuid].quantity = _newQuantity;
-    updateForSaleListArray(uuid);
+    forSaleInfo[uuid].quantity = _newQuantity;    
 
   }
 
@@ -209,11 +205,20 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
     require( forSaleInfo[uuid].isRegistered, "Token not registered for Sale"); 
 
-    forSaleList[forSaleInfo[uuid].arrayIndex] = forSaleList[forSaleList.length-1];
-    forSaleList.pop();
+    //Uuid of arrays's last_value 
+    bytes32 uuidFromLast = forSaleUuid[forSaleUuid.length-1]; 
+    
+    //move UUID from last position to the position where value wiil be deleted
+    forSaleUuid[forSaleInfo[uuid].arrayIndex] = forSaleUuid[forSaleUuid.length-1]; 
 
+    //update array position for last position's UUID
+    forSaleInfo[uuidFromLast].arrayIndex = forSaleInfo[uuid].arrayIndex;
+
+    //forSaleList.pop();
+    forSaleUuid.pop();
+
+    // forSaleInfo[uuid].isRegistered = false;
     delete forSaleInfo[uuid];
-
   }  
 
   function setNftScAddress(address _darkRallyNftAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
