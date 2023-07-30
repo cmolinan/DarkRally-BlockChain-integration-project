@@ -28,12 +28,13 @@ For this purpose, a React front-end was developed to demonstrate the functionali
   
 ## Getting Started
 - To get a local copy up, clone the repo like this:  
-  git clone git@github.com:cmolinan/DarkRally-BlockChain-integration-project.git
+  git clone https://github.com/cmolinan/DarkRally-BlockChain-integration-project.git
 ​
-- To get a local copy up of the main Front-End, clone the repo like this:  
-  git clone git@github.com:JorgeRojas827/nft-marketplace.git
+- To get a local copy up of the Jorge Rojas's main Front-End, clone the repo like this:  
+  git clone https://github.com/JorgeRojas827/nft-marketplace.git
 
-- Install the dependencies using `npm install` 
+- Install the dependencies using `npm install`
+
 ## Authors
 👤 **Carlos Molina**
 - GitHub: https://github.com/cmolinan
