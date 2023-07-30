@@ -1,3 +1,14 @@
+/*
+ _____             _      _____       _ _       
+ |  __ \           | |    |  __ \     | | |      
+ | |  | | __ _ _ __| | __ | |__) |__ _| | |_   _ 
+ | |  | |/ _` | '__| |/ / |  _  // _` | | | | | |
+ | |__| | (_| | |  |   <  | | \ \ (_| | | | |_| |
+ |_____/ \__,_|_|  |_|\_\ |_|  \_\__,_|_|_|\__, |
+                                            __/ |
+                                           |___/ 
+*/
+
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
@@ -9,6 +20,13 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155Supp
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
+
+
+/**
+* @title NFT Smart Contract for Dark Rally game
+* @dev This SC does not handle any coins
+* @author Carlos Molina (cmolinan10@gmail.com)
+*/
 contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgradeable, 
          PausableUpgradeable, ERC1155BurnableUpgradeable, ERC1155SupplyUpgradeable, UUPSUpgradeable {
     bytes32 public constant BUSINESS_ROLE = keccak256("BUSINESS_ROLE");
@@ -18,25 +36,25 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
 
     // Struct Nft Info 
     struct NftInfo {                
-        string nameOfNFT;  //ie: NFToy serie AA23-A   --only for show in getter function
-        string category; //ie: Toys, Tickets, Tropheus, Vehicles, Skins --only for show in getter function
-        string metadataHashIpfs;  //ie: QmNoLB8krmgfntxAHgaJrTE2Mf6NCPQ7ct1UvhH2pNkLeg        
-        uint256 maxSupply; //ie: 3000    
+        string nameOfNFT;  // ie: NFToy serie AA23-A   --only for show in getter function
+        string category; // ie: Toys, Tickets, Tropheus, Vehicles, Skins --only for show in getter function
+        string metadataHashIpfs;  // ie: QmNoLB8krmgfntxAHgaJrTE2Mf6NCPQ7ct1UvhH2pNkLeg        
+        uint256 maxSupply; // ie: 3000    
         bool askDateForMint; // If true, the expiration date will be validated before minting.
         uint256 validUntil; // initially used for Tickets - expressed in epoch time        
-        bool tokenIsRegistered; //needed to determine if this token has been registered or not. It's a requirement to MINT
+        bool tokenIsRegistered; // needed to determine if this token has been registered or not. It's a requirement to MINT
     }
     
-    //save all the NFT registered by function 'registerNewTypeOfNft'
+    // ave all the NFT registered by function 'registerNewTypeOfNft'
     mapping(uint256 tokenId => NftInfo) public nftInfo;
 
-    //required for OpenSea
+    // required for OpenSea
     string public name;
     
-    //storage the list of tokens registered
+    // storage the list of tokens registered
     uint256[] internal tokensList;
 
-    //Event when a new NFT is registered
+    /// @notice When a new NFT is registered this event is fired
     event RegisterNewTypeOfNFT (NftInfo);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -62,6 +80,17 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
     }
 
 
+    /**     
+     * @notice Allows registration of a new type of NFT like vehicles, toys, tickets, etc.
+     * @dev Only registered tokens id are allowed to be minted
+     * @param tokenId Token id number for a new type of NFT
+     * @param nameOfNFT Name of this token Id. Only used as reference
+     * @param category Category of this token Id. Only used as reference
+     * @param metadataHashIpfs IPFS hash of metadata file for this token Id
+     * @param maxSupply Maximum number to mint 
+     * @param askDateForMint If true, only mint if the mint date is less than or equal to the 'validUntil' parameter
+     * @param validUntil Maximum date for mint if parameter 'askDateForMint' is true. Use epoch time
+     */
     function registerNewTypeOfNft (
         uint256 tokenId, string calldata nameOfNFT, string calldata category,  string calldata metadataHashIpfs,
         uint256 maxSupply, bool askDateForMint,  uint256 validUntil
@@ -73,19 +102,23 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         if (askDateForMint) require ( validUntil > block.timestamp, "Expiration date must be greater than current date");
 
         nftInfo[tokenId] = NftInfo(nameOfNFT, category, metadataHashIpfs,
-         maxSupply, askDateForMint, validUntil, true);  //true means tokenIsRegistered
+         maxSupply, askDateForMint, validUntil, true);  // true means tokenIsRegistered
         
-        tokensList.push(tokenId); //push to array the new registered tokenId
+        tokensList.push(tokenId); // push to array the new registered tokenId
 
         emit RegisterNewTypeOfNFT (nftInfo[tokenId]);    
     }
 
+    /**     
+     * @notice Allows the deletion of the registration of an NFT type.
+     * @param tokenId Token id number
+     */
     function deleteRegisterOfTypeOfNft (uint256 tokenId) public  onlyRole(BUSINESS_ROLE) {
         require(nftInfo[tokenId].tokenIsRegistered, "TokenId is not registered");
         require(totalSupply(tokenId) == 0, "Not possible due TokenId already has mintages");
         delete nftInfo[tokenId];
 
-        //delete tokenId entry inside tokenList array
+        // delete tokenId entry inside tokenList array
         if (tokensList.length > 0) {
             for (uint256 i=tokensList.length-1;i>=0;--i){
                 if(tokensList[i]==tokenId){
@@ -97,6 +130,10 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         }
     }
 
+    /** 
+     * @notice List all the tokens ids registered
+     * @return Array with all the registered tokens id 
+     */
     function getTokensList() external view returns(uint256[] memory) {        
         uint256[] memory tokensListOut = new uint256[](tokensList.length);
 
@@ -107,16 +144,11 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         return tokensListOut; 
     }
 
-    function replaceTokensList(uint256[] calldata tokensIdArray) external onlyRole(BUSINESS_ROLE) {
-
-        delete tokensList;
-        if(tokensIdArray.length > 0) {
-            for (uint256 i = 0; i < tokensIdArray.length; ++i) {                
-                tokensList.push(tokensIdArray[i]);
-            }
-        }        
-    }
-
+    /** 
+     * @notice Allows the change of MetadataHashOfNft parameter for a token Id
+     * @param _tokenId Token Id number
+     * @param _metadataHashIpfs New IPFS hash of metadata file for this token Id      
+     */
     function changeMetadataHashOfNft(uint256 _tokenId, string memory _metadataHashIpfs)  
         external onlyRole(BUSINESS_ROLE) {
 
@@ -126,6 +158,11 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         nftInfo[_tokenId].metadataHashIpfs = _metadataHashIpfs;
     }
 
+    /** 
+     * @notice Allows the change of maxSupply parameter for a token Id
+     * @param _tokenId Token Id number
+     * @param _maxSupply New maximum number to mint     
+     */
     function changeMaxSupplyOfNft(uint256 _tokenId, uint256 _maxSupply)  
         external onlyRole(BUSINESS_ROLE) {
 
@@ -135,6 +172,12 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         nftInfo[_tokenId].maxSupply = _maxSupply;
     }
 
+    /** 
+     * @notice Mint registered NFTs
+     * @param account Address to be the owner
+     * @param tokenId Token Id to be minted
+     * @param amount Amount of tokens to be minted
+     */
     function mint(address account, uint256 tokenId, uint256 amount)
         external
         onlyRole(MINTER_ROLE)
@@ -148,6 +191,11 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
 
     }
    
+    /** 
+     * @notice Returns URI of a token Id
+     * @param _tokenId Token Id requested
+     * @return IPFS URI for the given token Id
+     */
     function uri(uint256 _tokenId) public override view returns(string memory) {
         return (
             string(
@@ -156,6 +204,12 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         );
     }
 
+    /** 
+     * @notice Returns the balance of each token-id owned by an account, from a list.
+     * @param _account Account requested
+     * @param _tokensList Array with a list of token Id requested
+     * @return Array with the balance of each token requested that is owned by the account.
+     */
     function getAssetsOfAccount(address _account,  uint256[] calldata _tokensList ) external view returns(uint256[] memory) {
         require(_tokensList.length != 0, "Length of array is zero");
         
@@ -166,6 +220,10 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         }
         return balanceList;
     }
+
+    ///////////////////////////////////////////////////////////////
+    ////                    HELPER FUNCTIONS                   ////
+    ///////////////////////////////////////////////////////////////
 
     function pause() public onlyRole(PAUSER_ROLE) {
         _pause();
@@ -190,7 +248,6 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
     {}
 
     // The following functions are overrides required by Solidity.
-
     function supportsInterface(bytes4 interfaceId)
         public
         view
