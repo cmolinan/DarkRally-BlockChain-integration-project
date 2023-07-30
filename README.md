@@ -23,9 +23,6 @@ For this purpose, a React front-end was developed to demonstrate the functionali
 - If you wish to test these developments, you must mint coins from the USDC Contract that is also included in this repository.
 - If you only want to test using the front-ends, write to this email to mint coins for you: cmolinan@gmail.com
 
-#### Link to Jorge Rojas's React front-end developed to demonstrate the functionalities of DarkRallySale Smart Contract
-  [Link to main front-end](https://github.com/JorgeRojas827/nft-marketplace/)
-  
 ## Getting Started
 - To get a local copy up, clone the repo like this:  
   git clone https://github.com/cmolinan/DarkRally-BlockChain-integration-project.git
