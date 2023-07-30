@@ -1,3 +1,14 @@
+/*
+ _____             _      _____       _ _       
+ |  __ \           | |    |  __ \     | | |      
+ | |  | | __ _ _ __| | __ | |__) |__ _| | |_   _ 
+ | |  | |/ _` | '__| |/ / |  _  // _` | | | | | |
+ | |__| | (_| | |  |   <  | | \ \ (_| | | | |_| |
+ |_____/ \__,_|_|  |_|\_\ |_|  \_\__,_|_|_|\__, |
+                                            __/ |
+                                           |___/ 
+*/
+
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
@@ -13,6 +24,11 @@ interface IDarkRallyNFT {
   function balanceOf(address account, uint256 id) external view returns (uint256);
 }
 
+/**
+* @title MarketPlace Smart Contract for Dark Rally game
+* @dev This Smart Contract transfer NFTs via intercontract links with DarkRallyNFT SC
+* @author Carlos Molina (cmolinan10@gmail.com)
+*/
 contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {    
   bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
   bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");    
@@ -24,7 +40,6 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
   // DarkRallyNFT contract
   IDarkRallyNFT DarkRallyNFT_SC;  // Setter in Constructor
 
-
   // Struct for Sale Info
   struct ForSaleInfo {
     uint256 tokenId;
@@ -35,10 +50,10 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     bool isRegistered;
   }
 
-  // List of NFT to sale -> uuid is obtained with  tokenId + '_' + owner
+  // List of NFT to sale -> uuid is based on: tokenId + '_' + owner
   mapping(bytes32 uuid => ForSaleInfo) internal forSaleInfo;
 
-  //new storage for the list of all UUID registered
+  // Storage for the list of all UUID registered
   bytes32[] public forSaleUuid;
 
   struct ScAddresses {
@@ -50,10 +65,10 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
 
   ScAddresses public scAddresses; // contains SC addresses
 
-  //Event when new NFT is offered to sale
+  /// @notice When a new NFT is offered to sale, this event is fired
   event SetNftPrices(uint256[] tokenId, uint256[] price);  
 
-  //Event when a purchase of NFTs was done 
+  /// @notice When a purchase of NFTs is done, this event is fired
   event PurchaseNft(uint256 tokenId, address owner, address buyer, uint256 quantity, uint256 amountPayed);
 
   /// @custom:oz-upgrades-unsafe-allow constructor
@@ -89,11 +104,17 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     scAddresses.feeWallet =  _feeWalletAddr;
   }
   
+  /**     
+   * @notice Allows the creation, by an owner, of an offer to sell one or more of its NFTs
+   * @param _tokenId Token id of sales offer
+   * @param _price Price for sell its NFT's
+   * @param _quantity Maximum amount of NFTs to sell
+   * @dev Detailed data is stored in a Mapping and (only) UUIDs in an array
+   */
   function createSaleOffer(uint256 _tokenId, uint256 _price, uint256 _quantity) external {
-    //msg.sender must be the owner
+    // msg.sender must be the owner
 
     bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
-    // bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
     require( !forSaleInfo[uuid].isRegistered, "Token is already registered");
 
     require( _quantity > 0, "Quantity must not be zero");
@@ -106,9 +127,15 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
 
   }
 
+  /** 
+   * @notice Purchase an amount of tokens
+   * @param _tokenId Token Id to be purchased
+   * @param _owner Owner of token Id to be purchased
+   * @param _price Price of each token Id to be purchased
+   * @param _quantity Amount of tokens to be purchased
+   */
   function purchaseNft(uint256 _tokenId, address _owner, uint256 _price, uint256 _quantity) external whenNotPaused {
-
-    //remember that msg.sender is the buyer
+    // remember that msg.sender is the buyer
     
     require( DarkRallyNFT_SC.balanceOf(_owner, _tokenId) >= _quantity, "Owner no longer have enough tokens");
 
@@ -126,35 +153,35 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     
     // calculations of transfers
     uint256 amountToPay = _price * _quantity;
-    uint256 net = (amountToPay * 95) / 100;  //95% to owner.        
-    uint256 company = (amountToPay * 45) / 1000;  //90% of the remaining 5% is for companyWallet
-    uint256 fee = amountToPay - net  - company;      //10% of the remaining 5% is for feeWallet
+    uint256 net = (amountToPay * 95) / 100;  // 95% to owner.        
+    uint256 company = (amountToPay * 45) / 1000;  // 90% of the remaining 5% is for companyWallet
+    uint256 fee = amountToPay - net  - company;      // 10% of the remaining 5% is for feeWallet
             
-    //transfer coins to owner
+    // transfer coins to owner
     USDCoin_SC.transferFrom(msg.sender, _owner, net);
 
-    //transfer coins to company Wallet
+    // transfer coins to company Wallet
     USDCoin_SC.transferFrom(msg.sender, scAddresses.companyWallet, company);
 
-    //transfer coins to fee Wallet
+    // transfer coins to fee Wallet
     USDCoin_SC.transferFrom(msg.sender, scAddresses.feeWallet, fee);
 
-    //Transfer of tokens to buyer
+    // transfer of tokens to buyer
     DarkRallyNFT_SC.safeTransferFrom(_owner, msg.sender, _tokenId, _quantity, "");
 
-    //update mapping and array
+    // update mapping and array
     if (maxQuantityToSale - _quantity > 0) {
       forSaleInfo[uuid].quantity = maxQuantityToSale - _quantity;
 
     } else {          
 
-      //Uuid of arrays's last_value 
+      // Uuid of arrays's last_value 
       bytes32 uuidFromLast = forSaleUuid[forSaleUuid.length-1]; 
       
-      //move UUID from last position to the position where value wiil be deleted
+      // move UUID from last position to the position where value wiil be deleted
       forSaleUuid[forSaleInfo[uuid].arrayIndex] = forSaleUuid[forSaleUuid.length-1]; 
 
-      //update array position for last position's UUID
+      // update array position for last position's UUID
       forSaleInfo[uuidFromLast].arrayIndex = forSaleInfo[uuid].arrayIndex;
 
       forSaleUuid.pop();
@@ -166,6 +193,10 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     emit PurchaseNft(_tokenId, _owner, msg.sender, _quantity, amountToPay);
   }
 
+  /** 
+   * @notice List all the NFTs offered for sale
+   * @return Array with info of all the NFTs offered for sale
+   */
   function getSalesList() external view returns(string[] memory) {        
     string[] memory forSaleListOut = new string[](forSaleUuid.length);
   
@@ -186,8 +217,14 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     return forSaleListOut; 
   }
 
+  /** 
+   * @notice Allows update of price and quantity for a NFT offered to sale
+   * @param _tokenId Token Id info to be updated
+   * @param _newPrice New price of token Id offered to sale
+   * @param _newQuantity New maximum quantity of token Id offered to sale
+   */
   function updatePriceAndQuantity(uint256 _tokenId, uint256 _newPrice, uint256 _newQuantity) external {
-    //msg.sender must be the owner
+    // msg.sender must be the owner
     
     bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
     require( forSaleInfo[uuid].isRegistered, "Token not registered for Sale"); 
@@ -199,53 +236,75 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
 
   }
 
+  /** 
+   * @notice Remove a sales offer 
+   * @dev Take note of the procedure to remove the UUID from the array of sales offers
+   * @param _tokenId Token Id to be removed from sales offers
+   */
   function removeSaleOffer(uint256 _tokenId) external {
     //msg.sender must be the owner
     
     bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
     require( forSaleInfo[uuid].isRegistered, "Token not registered for Sale"); 
 
-    //Uuid of arrays's last_value 
+    // Procedure to remove the UUD from the array of sales offers
+    // 1. Get the Uuid of array's last value
     bytes32 uuidFromLast = forSaleUuid[forSaleUuid.length-1]; 
     
-    //move UUID from last position to the position where value wiil be deleted
+    // 2. Move UUID from last position to the position where value will be removed
     forSaleUuid[forSaleInfo[uuid].arrayIndex] = forSaleUuid[forSaleUuid.length-1]; 
 
-    //update array position for last position's UUID
+    // 3. Update, in Mapping, array position for last position's UUID
     forSaleInfo[uuidFromLast].arrayIndex = forSaleInfo[uuid].arrayIndex;
 
-    //forSaleList.pop();
+    // 4 Remove the last position of the array
     forSaleUuid.pop();
 
-    // forSaleInfo[uuid].isRegistered = false;
+    // delete the mapping entry for the removed UUID
     delete forSaleInfo[uuid];
   }  
 
+  ////////////////////////////////////////////////////////////////////////
+  /////////                    Helper Methods                    /////////
+  ////////////////////////////////////////////////////////////////////////
+
+  /** 
+   * @notice Allows the address change of DarkRallyNFT SC 
+   * @param _darkRallyNftAddr New address for DarkRallyNFT SC
+   */
   function setNftScAddress(address _darkRallyNftAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
     require(_darkRallyNftAddr != address(0), "Address zero is invalid");
     scAddresses.darkRallyNft = _darkRallyNftAddr;
     DarkRallyNFT_SC = IDarkRallyNFT(scAddresses.darkRallyNft);
   }
 
+  /** 
+   * @notice Allows the address change of USD Coin SC 
+   * @param _usdcCoinAddr New address for USD Coin SC
+   */
   function setUsdcCoinScAddress(address _usdcCoinAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
     require(_usdcCoinAddr != address(0), "Address zero is invalid");
     scAddresses.usdcCoin = _usdcCoinAddr;
     USDCoin_SC = IERC20Upgradeable(scAddresses.usdcCoin);
   }
 
+  /** 
+   * @notice Allows the address change of Company wallet
+   * @param _companyWalletAddr New address for Company wallet
+   */
   function setCompanyWalletAddress(address _companyWalletAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
     require(_companyWalletAddr != address(0), "Address zero is invalid");
     scAddresses.companyWallet = _companyWalletAddr;
   }
 
+  /** 
+   * @notice Allows the address change of Fee wallet
+   * @param _feeWalletAddr New address for Fee wallet
+   */
   function setFeeWalletAddress(address _feeWalletAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
     require(_feeWalletAddr != address(0), "Address zero is invalid");
     scAddresses.feeWallet = _feeWalletAddr;
   }
-
-  ////////////////////////////////////////////////////////////////////////
-  /////////                    Helper Methods                    /////////
-  ////////////////////////////////////////////////////////////////////////
 
   function pause() public onlyRole(PAUSER_ROLE) {
     _pause();        
