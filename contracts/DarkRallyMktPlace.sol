@@ -18,11 +18,13 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "./IDarkRallyNFT.sol";
 
-interface IDarkRallyNFT {    
-  function safeTransferFrom(address from, address to, uint256 id, uint256 value, bytes calldata data) external;
-  function balanceOf(address account, uint256 id) external view returns (uint256);
-}
+
+// interface IDarkRallyNFT {    
+//   function safeTransferFrom(address from, address to, uint256 id, uint256 value, bytes calldata data) external;
+//   function balanceOf(address account, uint256 id) external view returns (uint256);
+// }
 
 /**
 * @title MarketPlace Smart Contract for Dark Rally game
@@ -157,18 +159,6 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     uint256 company = (amountToPay * 45) / 1000;  // 90% of the remaining 5% is for companyWallet
     uint256 fee = amountToPay - net  - company;      // 10% of the remaining 5% is for feeWallet
             
-    // transfer coins to owner
-    USDCoin_SC.transferFrom(msg.sender, _owner, net);
-
-    // transfer coins to company Wallet
-    USDCoin_SC.transferFrom(msg.sender, scAddresses.companyWallet, company);
-
-    // transfer coins to fee Wallet
-    USDCoin_SC.transferFrom(msg.sender, scAddresses.feeWallet, fee);
-
-    // transfer of tokens to buyer
-    DarkRallyNFT_SC.safeTransferFrom(_owner, msg.sender, _tokenId, _quantity, "");
-
     // update mapping and array
     if (maxQuantityToSale - _quantity > 0) {
       forSaleInfo[uuid].quantity = maxQuantityToSale - _quantity;
@@ -191,6 +181,19 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
 
     // Emit event
     emit PurchaseNft(_tokenId, _owner, msg.sender, _quantity, amountToPay);
+
+    // transfer coins to owner
+    require(USDCoin_SC.transferFrom(msg.sender, _owner, net),"Transfer to Owner wallet failed");
+
+    // transfer coins to company Wallet
+    require(USDCoin_SC.transferFrom(msg.sender, scAddresses.companyWallet, company),
+      "Transfer to Company wallet failed");
+
+    // transfer coins to fee Wallet
+    require(USDCoin_SC.transferFrom(msg.sender, scAddresses.feeWallet, fee),"Transfer to Fee wallet failed");
+
+    // transfer of tokens to buyer
+    DarkRallyNFT_SC.safeTransferFrom(_owner, msg.sender, _tokenId, _quantity, "");
   }
 
   /** 

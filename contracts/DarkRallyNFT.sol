@@ -42,7 +42,8 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         uint256 maxSupply; // ie: 3000    
         bool askDateForMint; // If true, the expiration date will be validated before minting.
         uint256 validUntil; // initially used for Tickets - expressed in epoch time        
-        bool tokenIsRegistered; // needed to determine if this token has been registered or not. It's a requirement to MINT
+        bool tokenIsRegistered; // needed to determine if this token has been registered or not. 
+                                // It's a requirement to MINT
     }
     
     // ave all the NFT registered by function 'registerNewTypeOfNft'
@@ -99,7 +100,8 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         require(!nftInfo[tokenId].tokenIsRegistered, "TokenId was already registered");
         require ( bytes(metadataHashIpfs).length > 32, "Check the MetadataHashIPFS entry");
         require (maxSupply > 0,"Maxsupply must be greater than 0");
-        if (askDateForMint) require ( validUntil > block.timestamp, "Expiration date must be greater than current date");
+        if (askDateForMint) require ( validUntil > block.timestamp, 
+            "Expiration date must be greater than current date");
 
         nftInfo[tokenId] = NftInfo(nameOfNFT, category, metadataHashIpfs,
          maxSupply, askDateForMint, validUntil, true);  // true means tokenIsRegistered
@@ -120,13 +122,16 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
 
         // delete tokenId entry inside tokenList array
         if (tokensList.length > 0) {
-            for (uint256 i=tokensList.length-1;i>=0;--i){
+            bool toPop = false;
+            for (uint256 i= 0; i < tokensList.length ; i++) {
                 if(tokensList[i]==tokenId){
                     tokensList[i]=tokensList[tokensList.length-1];
-                    tokensList.pop();                    
+                    //tokensList.pop();
+                    toPop = true;
                     break;
                 }
             }  
+            if(toPop) tokensList.pop();
         }
     }
 
@@ -184,8 +189,10 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         whenNotPaused
     {        
         require(nftInfo[tokenId].tokenIsRegistered, "Token needs to be registered before mint");
-        require(totalSupply(tokenId) + amount <= nftInfo[tokenId].maxSupply, "Limit of Supply for this token has been reached");        
-        if (nftInfo[tokenId].askDateForMint) require ( nftInfo[tokenId].validUntil > block.timestamp, "This token has already expired");
+        require(totalSupply(tokenId) + amount <= nftInfo[tokenId].maxSupply,
+             "Limit of Supply for this token has been reached");        
+        if (nftInfo[tokenId].askDateForMint) require ( nftInfo[tokenId].validUntil > block.timestamp, 
+            "This token has already expired");
 
         _mint(account, tokenId, amount, "");
 
@@ -210,7 +217,9 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
      * @param _tokensList Array with a list of token Id requested
      * @return Array with the balance of each token requested that is owned by the account.
      */
-    function getAssetsOfAccount(address _account,  uint256[] calldata _tokensList ) external view returns(uint256[] memory) {
+    function getAssetsOfAccount(
+            address _account,  uint256[] calldata _tokensList ) 
+                external view returns(uint256[] memory) {
         require(_tokensList.length != 0, "Length of array is zero");
         
         uint256[] memory balanceList = new uint256[](_tokensList.length);
@@ -233,7 +242,9 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         _unpause();
     }
 
-    function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+    function _beforeTokenTransfer(
+        address operator, address from, address to, uint256[] memory ids, 
+        uint256[] memory amounts, bytes memory data)
         internal
         whenNotPaused
         override(ERC1155Upgradeable, ERC1155SupplyUpgradeable)

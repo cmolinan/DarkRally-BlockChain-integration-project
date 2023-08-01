@@ -17,10 +17,11 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "./IDarkRallyNFT.sol";
 
-interface IDarkRallyNFT {    
-    function mint(address account, uint256 tokenId, uint256 amount) external;
-}
+// interface IDarkRallyNFT {    
+//     function mint(address account, uint256 tokenId, uint256 amount) external;
+// }
 
 /**
 * @title Public Sale Smart Contract for Dark Rally game
@@ -121,18 +122,19 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
         
         uint256 fee = (amountToPay * 10) / 100;  //10% to feeWallet
         uint256 net = amountToPay - fee; //90% to companyWaller
+    
+        // Emit event
+        emit PurchaseOfNft(msg.sender, _tokenId, _amount, amountToPay);
 
         // transfer coins to company Wallet
-        USDCoin_SC.transferFrom(msg.sender, scAddresses.companyWallet, net);
+        require(USDCoin_SC.transferFrom(msg.sender, scAddresses.companyWallet, net),
+            "Transfer to Company wallet failed");
 
         // transfer coins to fee Wallet
-        USDCoin_SC.transferFrom(msg.sender, scAddresses.feeWallet, fee);        
+        require(USDCoin_SC.transferFrom(msg.sender, scAddresses.feeWallet, fee),"Transfer to Fee wallet failed");
 
         // Intercontract mint of the tokens
         DarkRallyNFT_SC.mint(msg.sender, _tokenId, _amount);
-
-        // Emit event
-        emit PurchaseOfNft(msg.sender, _tokenId, _amount, amountToPay);
     }
     
     ////////////////////////////////////////////////////////////////////////
