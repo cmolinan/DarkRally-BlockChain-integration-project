@@ -63,7 +63,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         _disableInitializers();
     }
 
-    function initialize() initializer public {
+    function initialize() public initializer {
         __ERC1155_init("");
         __AccessControl_init();
         __Pausable_init();
@@ -100,8 +100,10 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         require(!nftInfo[tokenId].tokenIsRegistered, "TokenId was already registered");
         require ( bytes(metadataHashIpfs).length > 32, "Check the MetadataHashIPFS entry");
         require (maxSupply > 0,"Maxsupply must be greater than 0");
+
+        // solhint-disable-next-line
         if (askDateForMint) require ( validUntil > block.timestamp, 
-            "Expiration date must be greater than current date");
+            "Expiration date must be greater");
 
         nftInfo[tokenId] = NftInfo(nameOfNFT, category, metadataHashIpfs,
          maxSupply, askDateForMint, validUntil, true);  // true means tokenIsRegistered
@@ -117,7 +119,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
      */
     function deleteRegisterOfTypeOfNft (uint256 tokenId) public  onlyRole(BUSINESS_ROLE) {
         require(nftInfo[tokenId].tokenIsRegistered, "TokenId is not registered");
-        require(totalSupply(tokenId) == 0, "Not possible due TokenId already has mintages");
+        require(totalSupply(tokenId) == 0, "Token id already has mintages");
         delete nftInfo[tokenId];
 
         // delete tokenId entry inside tokenList array
@@ -188,9 +190,10 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         onlyRole(MINTER_ROLE)
         whenNotPaused
     {        
-        require(nftInfo[tokenId].tokenIsRegistered, "Token needs to be registered before mint");
+        require(nftInfo[tokenId].tokenIsRegistered, "Token not registered yet");
         require(totalSupply(tokenId) + amount <= nftInfo[tokenId].maxSupply,
-             "Limit of Supply for this token has been reached");        
+             "Maximum supply has been reached");        
+        // solhint-disable-next-line
         if (nftInfo[tokenId].askDateForMint) require ( nftInfo[tokenId].validUntil > block.timestamp, 
             "This token has already expired");
 
@@ -256,6 +259,7 @@ contract DarkRallyNFT is Initializable, ERC1155Upgradeable, AccessControlUpgrade
         internal
         onlyRole(UPGRADER_ROLE)
         override
+    // solhint-disable-next-line        
     {}
 
     // The following functions are overrides required by Solidity.

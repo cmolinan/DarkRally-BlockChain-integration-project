@@ -318,5 +318,6 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     internal
     onlyRole(UPGRADER_ROLE)
     override
+    // solhint-disable-next-line
   {}
 }
