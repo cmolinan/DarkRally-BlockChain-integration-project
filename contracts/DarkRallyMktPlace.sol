@@ -12,19 +12,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+
+
+// Interfaces
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./IDarkRallyNFT.sol";
-
-
-// interface IDarkRallyNFT {    
-//   function safeTransferFrom(address from, address to, uint256 id, uint256 value, bytes calldata data) external;
-//   function balanceOf(address account, uint256 id) external view returns (uint256);
-// }
 
 /**
 * @title MarketPlace Smart Contract for Dark Rally game
@@ -37,10 +34,10 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
   bytes32 public constant BUSINESS_ROLE = keccak256("BUSINESS_ROLE");  //set NFTs prices 
 
   // USDC Coin contract
-  IERC20Upgradeable USDCoin_SC;  // Setter in Constructor
+  IERC20Upgradeable public usdCoinSC;  // Setter in Constructor
 
   // DarkRallyNFT contract
-  IDarkRallyNFT DarkRallyNFT_SC;  // Setter in Constructor
+  IDarkRallyNFT public darkRallyNFTSC;  // Setter in Constructor
 
   // Struct for Sale Info
   struct ForSaleInfo {
@@ -96,10 +93,10 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     _grantRole(BUSINESS_ROLE, msg.sender);
     
     scAddresses.darkRallyNft = _darkRallySCnftAddress;
-    DarkRallyNFT_SC = IDarkRallyNFT(scAddresses.darkRallyNft);
+    darkRallyNFTSC = IDarkRallyNFT(scAddresses.darkRallyNft);
 
     scAddresses.usdcCoin = _usdcSCaddress;
-    USDCoin_SC = IERC20Upgradeable(scAddresses.usdcCoin);
+    usdCoinSC = IERC20Upgradeable(scAddresses.usdcCoin);
 
     scAddresses.companyWallet = _companyWalletAddr;
 
@@ -121,7 +118,7 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
 
     require( _quantity > 0, "Quantity must not be zero");
     require( _price > 0, "Price must not be zero");
-    require( DarkRallyNFT_SC.balanceOf(msg.sender, _tokenId) >= _quantity, "Don't own that quantity of tokens"); 
+    require( darkRallyNFTSC.balanceOf(msg.sender, _tokenId) >= _quantity, "Don't own that amount of tokens"); 
 
     forSaleUuid.push(uuid);
     
@@ -139,19 +136,19 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
   function purchaseNft(uint256 _tokenId, address _owner, uint256 _price, uint256 _quantity) external whenNotPaused {
     // remember that msg.sender is the buyer
     
-    require( DarkRallyNFT_SC.balanceOf(_owner, _tokenId) >= _quantity, "Owner no longer have enough tokens");
+    require( darkRallyNFTSC.balanceOf(_owner, _tokenId) >= _quantity, "Owner don't have enough tokens");
 
     bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", _owner));   //obtain uuid         
 
     require(forSaleInfo[uuid].isRegistered, "Token is not for sale");
-    require(forSaleInfo[uuid].price == _price, "Price is different that registered");
+    require(forSaleInfo[uuid].price == _price, "Registered price is different");
     
     uint256 maxQuantityToSale = forSaleInfo[uuid].quantity;
-    require(_quantity != 0 && maxQuantityToSale >= _quantity, "That quantity is not authorized to sale");
+    require(_quantity != 0 && maxQuantityToSale >= _quantity, "Amount is not authorized to sale");
 
     // verify USDC Coin
-    require( USDCoin_SC.allowance(msg.sender, address(this)) >= _price, "Not enough USDC allowance for this SC");
-    require( USDCoin_SC.balanceOf(msg.sender) >= _price, "Not enough USDC balance");
+    require( usdCoinSC.allowance(msg.sender, address(this)) >= _price, "Not enough USDC allowance");
+    require( usdCoinSC.balanceOf(msg.sender) >= _price, "Not enough USDC balance");
     
     // calculations of transfers
     uint256 amountToPay = _price * _quantity;
@@ -183,17 +180,17 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     emit PurchaseNft(_tokenId, _owner, msg.sender, _quantity, amountToPay);
 
     // transfer coins to owner
-    require(USDCoin_SC.transferFrom(msg.sender, _owner, net),"Transfer to Owner wallet failed");
+    require(usdCoinSC.transferFrom(msg.sender, _owner, net),"Transfer to Owner wallet failed");
 
     // transfer coins to company Wallet
-    require(USDCoin_SC.transferFrom(msg.sender, scAddresses.companyWallet, company),
-      "Transfer to Company wallet failed");
+    require(usdCoinSC.transferFrom(msg.sender, scAddresses.companyWallet, company),
+      "Failed transfer to Company");
 
     // transfer coins to fee Wallet
-    require(USDCoin_SC.transferFrom(msg.sender, scAddresses.feeWallet, fee),"Transfer to Fee wallet failed");
+    require(usdCoinSC.transferFrom(msg.sender, scAddresses.feeWallet, fee),"Failed fee transfer");
 
     // transfer of tokens to buyer
-    DarkRallyNFT_SC.safeTransferFrom(_owner, msg.sender, _tokenId, _quantity, "");
+    darkRallyNFTSC.safeTransferFrom(_owner, msg.sender, _tokenId, _quantity, "");
   }
 
   /** 
@@ -232,8 +229,8 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
     bytes32 uuid = keccak256(abi.encodePacked(_tokenId, "_", msg.sender));
     require( forSaleInfo[uuid].isRegistered, "Token not registered for Sale"); 
     require( _newPrice != forSaleInfo[uuid].price || _newQuantity != forSaleInfo[uuid].quantity, "Nothing to change");
-    require( DarkRallyNFT_SC.balanceOf(msg.sender, _tokenId) >= _newQuantity, "Doesn't have that quantity of tokens!");
-
+    require( darkRallyNFTSC.balanceOf(msg.sender, _tokenId) >= _newQuantity, "Owner don't have enough tokens");
+    
     forSaleInfo[uuid].price = _newPrice;
     forSaleInfo[uuid].quantity = _newQuantity;    
 
@@ -278,7 +275,7 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
   function setNftScAddress(address _darkRallyNftAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
     require(_darkRallyNftAddr != address(0), "Address zero is invalid");
     scAddresses.darkRallyNft = _darkRallyNftAddr;
-    DarkRallyNFT_SC = IDarkRallyNFT(scAddresses.darkRallyNft);
+    darkRallyNFTSC = IDarkRallyNFT(scAddresses.darkRallyNft);
   }
 
   /** 
@@ -288,7 +285,7 @@ contract DarkRallyMktPlace is Initializable, PausableUpgradeable, AccessControlU
   function setUsdcCoinScAddress(address _usdcCoinAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
     require(_usdcCoinAddr != address(0), "Address zero is invalid");
     scAddresses.usdcCoin = _usdcCoinAddr;
-    USDCoin_SC = IERC20Upgradeable(scAddresses.usdcCoin);
+    usdCoinSC = IERC20Upgradeable(scAddresses.usdcCoin);
   }
 
   /** 

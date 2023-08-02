@@ -1,0 +1,11 @@
+{
+  "extends": "solhint:recommended",
+  "solidity.linter": "solhint",
+  "plugins": [],
+  "rules": {
+    "avoid-sha3": "warn",
+    "max-line-length": ["error",120],
+    "no-global-import": "off",
+    "compiler-version": "off"
+  }
+}
