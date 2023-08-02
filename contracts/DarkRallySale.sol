@@ -12,15 +12,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-interface IDarkRallyNFT {    
-    function mint(address account, uint256 tokenId, uint256 amount) external;
-}
+// Interfaces
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "./IDarkRallyNFT.sol";
 
 /**
 * @title Public Sale Smart Contract for Dark Rally game
@@ -33,10 +32,10 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
     bytes32 public constant BUSINESS_ROLE = keccak256("BUSINESS_ROLE");  //set NFTs prices 
 
     // USDC Coin contract
-    IERC20Upgradeable USDCoin_SC;  // Setter in Constructor
+    IERC20Upgradeable public usdCoinSC;  // Setter in Constructor
 
     // DarkRallyNFT contract
-    IDarkRallyNFT DarkRallyNFT_SC;  // Setter in Constructor
+    IDarkRallyNFT public darkRallyNFTSC;  // Setter in Constructor
    
    // Prices storage:   tokenId => price 
     mapping(uint256 tokenId => uint256) public priceOfNft;
@@ -79,10 +78,10 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
         _grantRole(BUSINESS_ROLE, msg.sender);
         
         scAddresses.darkRallyNft = _darkRallySCnftAddress;
-        DarkRallyNFT_SC = IDarkRallyNFT(scAddresses.darkRallyNft);
+        darkRallyNFTSC = IDarkRallyNFT(scAddresses.darkRallyNft);
 
         scAddresses.usdcCoin = _usdcSCaddress;
-        USDCoin_SC = IERC20Upgradeable(scAddresses.usdcCoin);
+        usdCoinSC = IERC20Upgradeable(scAddresses.usdcCoin);
 
         scAddresses.companyWallet = _companyWalletAddr;
 
@@ -95,7 +94,7 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
      * @param _price Array with new price for the respective token Id
     */
     function setNftPrice(uint256[] calldata _tokenId, uint256[] calldata _price) external onlyRole(BUSINESS_ROLE) {
-        require( _price.length == _tokenId.length && _price.length != 0, "Length of arrays not equal or zero");
+        require( _price.length == _tokenId.length && _price.length != 0, "Arrays' length not equal or zero");
 
         for (uint256  i = 0; i < _price.length; i++) {
             priceOfNft[_tokenId[i]] = _price[i];
@@ -115,24 +114,25 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
         // Price to be paid for all tokens
         uint256 amountToPay = priceOfNft[_tokenId] * _amount;
 
-        require( amountToPay > 0, "NFT without price or amount is zero");
-        require( USDCoin_SC.allowance(msg.sender, address(this)) >= amountToPay, "Not enough allowance for this SC");
-        require( USDCoin_SC.balanceOf(msg.sender) >= amountToPay, "Not enough USDC balance"); 
+        require( amountToPay > 0, "Price don't exist or amount is 0");
+        require( usdCoinSC.allowance(msg.sender, address(this)) >= amountToPay, "Not enough allowance for this SC");
+        require( usdCoinSC.balanceOf(msg.sender) >= amountToPay, "Not enough USDC balance"); 
         
         uint256 fee = (amountToPay * 10) / 100;  //10% to feeWallet
         uint256 net = amountToPay - fee; //90% to companyWaller
-
-        // transfer coins to company Wallet
-        USDCoin_SC.transferFrom(msg.sender, scAddresses.companyWallet, net);
-
-        // transfer coins to fee Wallet
-        USDCoin_SC.transferFrom(msg.sender, scAddresses.feeWallet, fee);        
-
-        // Intercontract mint of the tokens
-        DarkRallyNFT_SC.mint(msg.sender, _tokenId, _amount);
-
+    
         // Emit event
         emit PurchaseOfNft(msg.sender, _tokenId, _amount, amountToPay);
+
+        // transfer coins to company Wallet
+        require(usdCoinSC.transferFrom(msg.sender, scAddresses.companyWallet, net),
+            "Failed transfer to company");
+
+        // transfer coins to fee Wallet
+        require(usdCoinSC.transferFrom(msg.sender, scAddresses.feeWallet, fee),"Failed fee transfer");
+
+        // Intercontract mint of the tokens
+        darkRallyNFTSC.mint(msg.sender, _tokenId, _amount);
     }
     
     ////////////////////////////////////////////////////////////////////////
@@ -146,7 +146,7 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
     function setNftScAddress(address _darkRallyNftAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_darkRallyNftAddr != address(0), "Address zero is invalid");
         scAddresses.darkRallyNft = _darkRallyNftAddr;
-        DarkRallyNFT_SC = IDarkRallyNFT(scAddresses.darkRallyNft);
+        darkRallyNFTSC = IDarkRallyNFT(scAddresses.darkRallyNft);
     }
 
     /** 
@@ -156,7 +156,7 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
     function setUsdcCoinScAddress(address _usdcCoinAddr) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_usdcCoinAddr != address(0), "Address zero is invalid");
         scAddresses.usdcCoin = _usdcCoinAddr;
-        USDCoin_SC = IERC20Upgradeable(scAddresses.usdcCoin);
+        usdCoinSC = IERC20Upgradeable(scAddresses.usdcCoin);
     }
 
     /** 
@@ -189,5 +189,6 @@ contract DarkRallySale is Initializable, PausableUpgradeable, AccessControlUpgra
         internal
         onlyRole(UPGRADER_ROLE)
         override
+    // solhint-disable-next-line                
     {}
 }
