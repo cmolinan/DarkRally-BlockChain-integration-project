@@ -54,21 +54,17 @@ interface IDarkRallyNFT {
 
     function UPGRADER_ROLE() external view returns (bytes32);
 
-    function balanceOf(address account, uint256 id)
-        external
-        view
-        returns (uint256);
-
-    function balanceOfBatch(address[] memory accounts, uint256[] memory ids)
-        external
-        view
-        returns (uint256[] memory);
-
-    function burn(
+    function balanceOf(
         address account,
-        uint256 id,
-        uint256 value
-    ) external;
+        uint256 id
+    ) external view returns (uint256);
+
+    function balanceOfBatch(
+        address[] memory accounts,
+        uint256[] memory ids
+    ) external view returns (uint256[] memory);
+
+    function burn(address account, uint256 id, uint256 value) external;
 
     function burnBatch(
         address account,
@@ -76,8 +72,10 @@ interface IDarkRallyNFT {
         uint256[] memory values
     ) external;
 
-    function changeMaxSupplyOfNft(uint256 _tokenId, uint256 _maxSupply)
-        external;
+    function changeMaxSupplyOfNft(
+        uint256 _tokenId,
+        uint256 _maxSupply
+    ) external;
 
     function changeMetadataHashOfNft(
         uint256 _tokenId,
@@ -88,10 +86,10 @@ interface IDarkRallyNFT {
 
     function exists(uint256 id) external view returns (bool);
 
-    function getAssetsOfAccount(address _account, uint256[] memory _tokensList)
-        external
-        view
-        returns (uint256[] memory);
+    function getAssetsOfAccount(
+        address _account,
+        uint256[] memory _tokensList
+    ) external view returns (uint256[] memory);
 
     function getRoleAdmin(bytes32 role) external view returns (bytes32);
 
@@ -99,27 +97,25 @@ interface IDarkRallyNFT {
 
     function grantRole(bytes32 role, address account) external;
 
-    function hasRole(bytes32 role, address account)
-        external
-        view
-        returns (bool);
+    function hasRole(
+        bytes32 role,
+        address account
+    ) external view returns (bool);
 
     function initialize() external;
 
-    function isApprovedForAll(address account, address operator)
-        external
-        view
-        returns (bool);
-
-    function mint(
+    function isApprovedForAll(
         address account,
-        uint256 tokenId,
-        uint256 amount
-    ) external;
+        address operator
+    ) external view returns (bool);
+
+    function mint(address account, uint256 tokenId, uint256 amount) external;
 
     function name() external view returns (string memory);
 
-    function nftInfo(uint256 tokenId)
+    function nftInfo(
+        uint256 tokenId
+    )
         external
         view
         returns (
@@ -178,9 +174,10 @@ interface IDarkRallyNFT {
 
     function upgradeTo(address newImplementation) external;
 
-    function upgradeToAndCall(address newImplementation, bytes memory data)
-        external
-        payable;
+    function upgradeToAndCall(
+        address newImplementation,
+        bytes memory data
+    ) external payable;
 
     function uri(uint256 _tokenId) external view returns (string memory);
 }
